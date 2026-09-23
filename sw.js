@@ -1,6 +1,6 @@
 /* Inkhall — Service Worker
    改完应用后，把 CACHE 的版本号升一位，用户的页面就会弹「发现新版本」。 */
-const CACHE = 'inkhall-v2';
+const CACHE = 'inkhall-v3';
 const SHELL = ['./', './index.html', './manifest.json',
   './icons/favicon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 

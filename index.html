@@ -237,7 +237,8 @@ body{background-size:cover;background-attachment:fixed;background-position:cente
       <div id="paras"></div>
       <div class="card" id="dirCard">
         <div class="row"><b class="grow" style="color:var(--acc)">下一段要发生什么</b>
-          <button class="mini" id="btnViewpoint">👁 视点</button></div>
+          <button class="mini" id="btnViewpoint">👁 视点</button>
+          <button class="mini" id="btnCast">👥 出场角色</button></div>
         <div class="mut" id="vpLine" style="margin-top:4px"></div>
         <textarea class="f" id="dirBox" rows="2" style="margin-top:8px"
           placeholder="例：她在天桥下被人拦住，对方一眼认出她的家徽。&#10;一句话也行。留空就顺着上文往下写。"></textarea>
@@ -330,7 +331,9 @@ body{background-size:cover;background-attachment:fixed;background-position:cente
     <!-- ============ 接口 ============ -->
     <section class="view" id="view-api">
       <div class="card">
-        <label class="lab"><b>接口地址</b>（OpenAI 兼容的 chat/completions）</label>
+        <label class="lab"><b>服务商</b>（选一个就自动填地址与常见模型名）</label>
+        <select class="f" id="cfgProvider"></select>
+        <label class="lab"><b>接口地址</b>（OpenAI 兼容的 chat/completions，可以直接改）</label>
         <input class="f" id="cfgApiUrl" placeholder="https://api.deepseek.com/v1/chat/completions">
         <label class="lab"><b>API Key</b>（只存在这台设备的 localStorage，不上传）</label>
         <input class="f" id="cfgApiKey" type="password" placeholder="sk-...">
@@ -800,16 +803,21 @@ function currentSelection() {
   });
 
   const pov = curPov();
-  const onStage = (BOOK.ledger.people || []).map(p => clean(p.name));
+  const hm = {};
+  (BOOK.ledger.people || []).forEach(p => { if (clean(p.name)) hm[clean(p.name)] = p.here !== false; });
   const cardList = [];
   let cardChars = 0;
   BOOK.cards.forEach(c => {
+    const n = clean(c.name);
     let s = 0, why = '';
-    if (clean(c.name) === pov) { s = 99; why = '视点人物'; }
+    if (n === pov) { s = 99; why = '视点人物'; }
+    else if (hm[n] === true) { s = 85; why = '在场'; }
     else if (c.always) { s = 80; why = '常驻'; }
-    else if (clean(c.name) && onStage.indexOf(clean(c.name)) >= 0) { s = 60; why = '上一段在场'; }
-    else if (picked && allow(picked.cards, c.name)) { s = 50; why = 'AI 选中'; }
-    else if (clean(c.name) && hay.indexOf(clean(c.name)) >= 0) { s = 40; why = '被提到'; }
+    else if (hm[n] === false) { s = 20; why = '不在场'; }
+    else if (n && hay.indexOf(n) >= 0) { s = 40; why = '被提到'; }
+    else if (picked && allow(picked.cards, n)) { s = 50; why = 'AI 选中'; }
+    /* 标了不在场、这一段也没提到 → 干脆不带，省 token 也不容易写漏 */
+    if (hm[n] === false && n !== pov && (!n || hay.indexOf(n) < 0)) return;
     if (s) { cardChars += 200; cardList.push({ c: c, s: s, why: why }); }
   });
   cardList.sort((a, b) => b.s - a.s);
@@ -1243,9 +1251,35 @@ async function fetchModels() {
 function fillModels(list) {
   const dl = $('#modelList');
   if (dl) dl.innerHTML = list.map(m => '<option value="' + esc(m) + '"></option>').join('');
+  /* 再放一个明摆着的下拉。手机浏览器会按输入框里已有内容过滤 datalist，
+     模型名填错时点输入框可能什么都看不到——一个不过滤的下拉更靠得住。 */
+  let sel = $('#cfgModelPick');
+  if (!sel) {
+    const holder = $('#cfgModel') ? $('#cfgModel').parentNode : null;
+    if (holder) {
+      sel = document.createElement('select');
+      sel.className = 'f';
+      sel.id = 'cfgModelPick';
+      sel.style.marginTop = '8px';
+      holder.appendChild(sel);
+    }
+  }
+  if (sel) {
+    sel.innerHTML = '<option value="">从列表里选一个模型…</option>'
+      + list.map(m => '<option value="' + esc(m) + '">' + esc(m) + '</option>').join('');
+    sel.value = list.indexOf(clean(CFG.model)) >= 0 ? clean(CFG.model) : '';
+    sel.onchange = () => {
+      if (!sel.value) return;
+      CFG.model = sel.value; saveCfg();
+      if ($('#cfgModel')) $('#cfgModel').value = sel.value;
+      toast('模型已切到 ' + sel.value);
+    };
+  }
   const h = $('#modelHint');
-  if (h) h.innerHTML = '接口里有 <b>' + list.length + '</b> 个模型：' + esc(list.slice(0, 10).join('、')) + (list.length > 10 ? ' …' : '')
-    + '<br>用输入框点一下就能选，也可以手输（自建网关 / Ollama 的模型名常常不在列表里）。';
+  if (h) h.innerHTML = '一共 <b>' + list.length + '</b> 个可选模型：' + esc(list.slice(0, 10).join('、')) + (list.length > 10 ? ' …' : '')
+    + '<br>用下面的下拉直接选，或在「模型名」里手输（自建网关 / Ollama 的模型名常常不在列表里）。'
+    + (clean(CFG.model) && list.indexOf(clean(CFG.model)) < 0
+      ? '<br><b style="color:var(--acc)">⚠ 现在填的「' + esc(clean(CFG.model)) + '」不在这个列表里，一般会报模型不存在。</b>' : '');
 }
 function fillModelsFromCache() {
   const o = load(K.models, null);
@@ -1353,6 +1387,111 @@ async function aiPickEntries() {
   const o = tryJSON(r.text);
   if (!o) return null;
   return { codex: arr(o.codex), cards: arr(o.cards) };
+}
+
+/* ============================================================================
+   服务商预设：接口地址与常见模型名做成选项
+   ============================================================================ */
+const PROVIDERS = [
+  { name: '自定义（自己填）', url: '', models: [] },
+  { name: 'DeepSeek', url: 'https://api.deepseek.com/v1/chat/completions',
+    models: ['deepseek-chat', 'deepseek-reasoner'] },
+  { name: '月之暗面 Kimi', url: 'https://api.moonshot.cn/v1/chat/completions',
+    models: ['moonshot-v1-8k', 'moonshot-v1-32k', 'kimi-k2-0711-preview'] },
+  { name: '智谱 GLM', url: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+    models: ['glm-4-flash', 'glm-4-air', 'glm-4-plus'] },
+  { name: '通义千问', url: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+    models: ['qwen-plus', 'qwen-max', 'qwen-turbo'] },
+  { name: '硅基流动', url: 'https://api.siliconflow.cn/v1/chat/completions',
+    models: ['deepseek-ai/DeepSeek-V3', 'Qwen/Qwen2.5-72B-Instruct'] },
+  { name: '火山方舟（豆包）', url: 'https://ark.cn-beijing.volces.com/api/v3/chat/completions', models: [] },
+  { name: 'OpenAI', url: 'https://api.openai.com/v1/chat/completions',
+    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini'] },
+  { name: 'OpenRouter', url: 'https://openrouter.ai/api/v1/chat/completions',
+    models: ['deepseek/deepseek-chat', 'anthropic/claude-3.5-sonnet', 'openai/gpt-4o-mini'] },
+  { name: '本地 Ollama', url: 'http://localhost:11434/v1/chat/completions',
+    models: ['qwen2.5:14b', 'llama3.1:8b'] },
+];
+function providerOf(url) {
+  const u = clean(url);
+  return PROVIDERS.filter(p => p.url && p.url === u)[0] || PROVIDERS[0];
+}
+function renderProviderPick() {
+  const sel = $('#cfgProvider');
+  if (!sel) return;
+  if (!sel.options.length) sel.innerHTML = PROVIDERS.map((p, i) => '<option value="' + i + '">' + esc(p.name) + '</option>').join('');
+  const p = providerOf(CFG.apiUrl);
+  sel.value = String(Math.max(0, PROVIDERS.indexOf(p)));
+}
+function applyProvider(i) {
+  const p = PROVIDERS[i];
+  if (!p) return;
+  if (!p.url) { toast('服务商选成了「自定义」，自己填接口地址就行'); return; }
+  CFG.apiUrl = p.url;
+  $('#cfgApiUrl').value = p.url;
+  if (p.models.length) {
+    fillModels(p.models);
+    const h = $('#modelHint');
+    if (h) h.innerHTML = '这是 <b>' + esc(p.name) + '</b> 的常见模型名：点「模型名」输入框或下面的下拉就能选。'
+      + '<br>名字被官方改过的话，点「拉取模型列表」拿真实列表。';
+    if (p.models.indexOf(clean(CFG.model)) < 0) { CFG.model = p.models[0]; $('#cfgModel').value = p.models[0]; }
+  }
+  saveCfg();
+  toast('已切到 ' + p.name + (p.models.length ? '，模型默认 ' + p.models[0] : '（模型名要自己填）'));
+}
+
+/* ============================================================================
+   出场角色状态栏（右上角 ⋯，或文稿页的 👥）
+   ============================================================================ */
+function openCast() {
+  const names = allNames();
+  const people = BOOK.ledger.people || [];
+  const hereCount = people.filter(p => clean(p.name) && p.here !== false).length;
+  const rows = names.map(n => {
+    const c = cardOf(n), st = humanOf(n), si = people.indexOf(st);
+    if (!st) {
+      return '<div class="card"><div class="row"><b class="grow">' + esc(n) + '</b>'
+        + '<button class="btn sm" data-act="mkstate" data-name="' + esc(n) + '">＋ 建立状态</button></div>'
+        + (c && clean(c.role) ? '<div class="mut" style="margin-top:5px">' + esc(clean(c.role)) + '</div>' : '') + '</div>';
+    }
+    const here = st.here !== false;
+    const f = (k, label, ph) => '<div class="kv"><span class="k">' + label + '</span><span class="v"><input class="f" data-list="ledger.people" data-i="' + si + '" data-k="' + k + '" value="' + esc(st[k]) + '" placeholder="' + esc(ph || '') + '"></span></div>';
+    return '<div class="card" data-ci="' + si + '"' + (here ? ' style="border-color:var(--acc)"' : '') + '>'
+      + '<div class="row"><b class="grow">' + esc(n) + '</b>'
+      + '<button class="mini" data-here="' + si + '">' + (here ? '● 在场' : '○ 不在场') + '</button>'
+      + (c && clean(c.secret) ? '<span class="tag a" title="' + esc(clean(c.secret)) + '">有秘密</span>' : '') + '</div>'
+      + (c && clean(c.role) ? '<div class="mut" style="margin-bottom:4px">' + esc(clean(c.role)) + '</div>' : '')
+      + f('where', '所在', '例：万钟塔下')
+      + f('body', '身体', '伤势、疲惫、衣着')
+      + f('mood', '情绪', '')
+      + f('goal', '想要', '')
+      + '<div class="kv"><span class="k">随身</span><span class="v"><textarea class="f" rows="2" data-lines="ledger.people.' + si + '.items" placeholder="一行一件">' + esc(arr(st.items).join('\n')) + '</textarea></span></div>'
+      + '<div class="mut" style="margin-top:6px">已知 ' + arr(st.knows).length + ' 条 · 不知道 ' + arr(st.unaware).length + ' 条 —— 到「人物」页改</div>'
+      + '</div>';
+  }).join('');
+
+  openSheet('<button class="close" data-x="1">✕</button><h3>👥 出场角色</h3>'
+    + '<div class="mut" style="margin-top:6px">' + esc(clean(BOOK.ledger.time) || '（没写时间）') + ' · ' + esc(clean(BOOK.ledger.place) || '（没写地点）')
+    + '<br>标成「在场」的人（' + hereCount + ' 个）会优先带进下一段的提示词；标成「不在场」的人就不会被带进去，除非这一段提到了他。'
+    + '这里改的东西会直接存进账本。</div>'
+    + (rows || '<div class="empty">还没有人物。<br>先去「人物」页建一张卡。</div>'));
+
+  $('#sheetPanel').onclick = ev => {
+    const h = ev.target.closest('[data-here]');
+    if (h) {
+      const p = people[+h.dataset.here];
+      if (p) {
+        p.here = p.here === false ? true : false;
+        save();
+        h.textContent = p.here !== false ? '● 在场' : '○ 不在场';
+        const card = h.closest('.card');
+        if (card) card.style.borderColor = p.here !== false ? 'var(--acc)' : '';
+      }
+      return;
+    }
+    const x = ev.target.closest('[data-x]');
+    if (x && x.dataset.x === '1') closeSheet();
+  };
 }
 
 async function rewriteLast() {
@@ -1707,6 +1846,11 @@ function renderApi() {
   const sb = $('#statsBox');
   if (sb) sb.innerHTML = '<b>本书</b>：' + usageLine(bk) + '<br><b>这台设备</b>：' + usageLine(u);
   if ($('#btnStats')) $('#btnStats').onclick = () => openStats();
+  renderProviderPick();
+  if (!document.getElementById('cfgModelPick')) {
+    const p0 = providerOf(CFG.apiUrl);
+    if (p0.models.length) fillModels(p0.models); else fillModelsFromCache();
+  }
 }
 function renderAll() { renderTop(); renderBoard(); renderDoc(); renderPeople(); renderCodex(); renderGod(); renderSetup(); renderLook(); renderApi(); }
 
@@ -2097,6 +2241,9 @@ $('#btnExportWorld').onclick = () => download((clean(BOOK.world.title) || '世�
 }), null, 1), 'application/json');
 
 /* 接口页绑定 */
+$('#btnQuick').onclick = () => openCast();
+$('#btnCast').onclick = () => openCast();
+$('#cfgProvider').onchange = e => applyProvider(+e.target.value);
 $('#btnModels').onclick = () => fetchModels();
 $('#btnTest').onclick = () => testConn();
 ['cfgApiUrl', 'cfgApiKey', 'cfgModel', 'cfgTemp', 'cfgExtra', 'cfgLen'].forEach(id => {
