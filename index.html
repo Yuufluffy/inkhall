@@ -66,7 +66,7 @@ label.lab b{color:var(--fg2);font-weight:400}
   background:var(--bg3);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;
   font-size:13.5px;color:var(--fg2);white-space:nowrap}
 .btn:active{transform:translateY(1px)}
-.btn.pri{background:var(--accd);border-color:#6b5326;color:#e8d5ac}
+.btn.pri{background:var(--accd);border-color:#6b5326;color:var(--on-acc)}
 .btn.ghost{background:transparent}
 .btn.wide{width:100%;margin-top:4px}
 .btn.sm{padding:6px 10px;font-size:12.5px;border-radius:8px}
@@ -85,14 +85,14 @@ label.lab b{color:var(--fg2);font-weight:400}
 .beat{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border-radius:11px;
   border:1px solid transparent;margin-top:6px}
 .beat.done{color:var(--mut)}
-.beat.cur{background:#1b2231;border-color:#3a4460}
+.beat.cur{background:var(--chip);border-color:#3a4460}
 .beat .dot{width:9px;height:9px;border-radius:50%;background:#3d4759;margin-top:7px;flex:0 0 auto}
 .beat.cur .dot{background:var(--acc);box-shadow:0 0 0 4px rgba(200,161,90,.15)}
 .beat.done .dot{background:#4a7f5f}
 .beat .txt{flex:1;min-width:0;background:transparent;border:0;outline:none;color:inherit;
   font-size:14.5px;line-height:1.55;resize:none;overflow:hidden;padding:0}
 .beat .acts{display:flex;gap:4px;flex:0 0 auto}
-.mini{font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--line2);color:var(--fg2);background:#141922}
+.mini{font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--line2);color:var(--fg2);background:var(--chip)}
 
 /* ---- 文稿 ---- */
 #docHead{display:flex;justify-content:space-between;align-items:center;gap:8px;
@@ -101,15 +101,15 @@ label.lab b{color:var(--fg2);font-weight:400}
 #docHead .t em{font-style:normal;color:var(--mut)}
 .para{position:relative;padding:12px 13px;border-radius:12px;background:#141922;
   border:1px solid transparent;border-left:2px solid #2b3446;margin-bottom:10px;font-size:15.5px;
-  line-height:1.9;color:#ccd3e0;white-space:pre-wrap;word-break:break-word}
+  line-height:1.9;color:var(--txc);white-space:pre-wrap;word-break:break-word}
 .para.draft{border:1px dashed #3a4460;border-left:2px solid var(--acc);background:#191e28}
 .para .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
-.para .pov{font-size:11.5px;color:var(--fg2);background:#1b2231;border-radius:6px;padding:2px 8px}
+.para .pov{font-size:11.5px;color:var(--fg2);background:var(--chip);border-radius:6px;padding:2px 8px}
 .para .st{font-size:11.5px;color:var(--mut)}
 .para.draft .st{color:var(--acc)}
 .para .tools{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.para textarea.edit{width:100%;min-height:120px;background:#0e1219;border:1px solid var(--blue);
-  border-radius:10px;padding:9px;color:var(--fg);font-size:15px;line-height:1.9;outline:none;resize:vertical}
+.para textarea.edit{width:100%;min-height:120px;background:var(--in);border:1px solid var(--blue);
+  border-radius:10px;padding:9px;color:var(--txc);font-size:15px;line-height:1.9;outline:none;resize:vertical}
 .empty{text-align:center;color:var(--mut);font-size:13px;padding:34px 10px;line-height:1.9}
 
 #writebar{position:sticky;bottom:0;z-index:6;display:flex;gap:7px;flex-wrap:wrap;
@@ -164,7 +164,7 @@ label.lab b{color:var(--fg2);font-weight:400}
 #busy{position:fixed;inset:0;z-index:70;display:none;background:rgba(6,8,12,.55);
   align-items:center;justify-content:center;flex-direction:column;gap:12px}
 #busy.on{display:flex}
-.spin{width:34px;height:34px;border:3px solid #2b3446;border-top-color:var(--acc);
+.spin{width:34px;height:34px;border:3px solid var(--line2);border-top-color:var(--acc);
   border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 #busyTxt{font-size:13px;color:var(--fg2);max-width:80vw;text-align:center;line-height:1.7}
@@ -177,6 +177,7 @@ label.lab b{color:var(--fg2);font-weight:400}
 :root{
   --tx-size:15.5px; --ui-size:15px; --lh:1.9; --maxw:760px;
   --in:#0e1219; --para:#141922; --para2:#191e28; --bar:rgba(14,18,25,.94); --toast:rgba(28,35,49,.97);
+  --chip:#1b2231; --txc:#ccd3e0; --on-acc:#e8d5ac;
   --font-body:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Segoe UI",sans-serif;
 }
 body{font-size:var(--ui-size)}
@@ -190,10 +191,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 .para.draft{background:var(--para2)}
 #writebar{background:var(--bar)}
 .toast{background:var(--toast)}
-textarea.edit{background:var(--in)}
-body[data-theme="light"]{--bg:#f6f3ec;--bg2:#fff;--bg3:#fff;--line:#e3ded3;--line2:#cbc3b2;--fg:#26221b;--fg2:#4c453a;--mut:#8a8171;--acc:#a06f22;--accd:#f2e3c8;--in:#fff;--para:#fff;--para2:#fffdf7;--bar:rgba(255,255,255,.94);--toast:rgba(255,255,255,.98);--blue:#3d6fa8;--green:#2f7a52;--red:#a8443f}
-body[data-theme="sepia"]{--bg:#efe6d5;--bg2:#f8f1e3;--bg3:#f8f1e3;--line:#ded1b9;--line2:#c7b593;--fg:#2e2519;--fg2:#574a37;--mut:#8b7a5f;--acc:#8a5a1e;--accd:#eddfc2;--in:#fffaf0;--para:#fffaf0;--para2:#fdf5e6;--bar:rgba(248,241,227,.95);--toast:rgba(248,241,227,.98);--blue:#3f6a8c;--green:#3f6b4a;--red:#9c4a3a}
-body[data-theme="night"]{--bg:#0f1412;--bg2:#151c19;--bg3:#1a231f;--line:#26332d;--line2:#33443c;--fg:#dfe8e2;--fg2:#b3c2b9;--mut:#7f8f87;--acc:#7fc7a0;--accd:#1d2b23;--in:#0c110f;--para:#141b18;--para2:#18211d;--bar:rgba(15,20,18,.94);--toast:rgba(26,35,31,.97)}
+textarea.edit{background:var(--in);color:var(--txc)}
+body[data-theme="light"]{--bg:#f6f3ec;--bg2:#fff;--bg3:#fff;--line:#e3ded3;--line2:#cbc3b2;--fg:#26221b;--fg2:#4c453a;--mut:#8a8171;--acc:#a06f22;--accd:#f2e3c8;--in:#fff;--para:#fff;--para2:#fffdf7;--bar:rgba(255,255,255,.94);--toast:rgba(255,255,255,.98);--blue:#3d6fa8;--green:#2f7a52;--red:#a8443f;--chip:#f1ece0;--txc:#2a2520;--on-acc:#8a5a1e}
+body[data-theme="sepia"]{--bg:#efe6d5;--bg2:#f8f1e3;--bg3:#f8f1e3;--line:#ded1b9;--line2:#c7b593;--fg:#2e2519;--fg2:#574a37;--mut:#8b7a5f;--acc:#8a5a1e;--accd:#eddfc2;--in:#fffaf0;--para:#fffaf0;--para2:#fdf5e6;--bar:rgba(248,241,227,.95);--toast:rgba(248,241,227,.98);--blue:#3f6a8c;--green:#3f6b4a;--red:#9c4a3a;--chip:#eee3cd;--txc:#33291b;--on-acc:#7a4c14}
+body[data-theme="night"]{--bg:#0f1412;--bg2:#151c19;--bg3:#1a231f;--line:#26332d;--line2:#33443c;--fg:#dfe8e2;--fg2:#b3c2b9;--mut:#7f8f87;--acc:#7fc7a0;--accd:#1d2b23;--in:#0c110f;--para:#141b18;--para2:#18211d;--bar:rgba(15,20,18,.94);--toast:rgba(26,35,31,.97);--chip:#1e2823;--txc:#dfe8e2;--on-acc:#cfe9dc}
 body{background-size:cover;background-attachment:fixed;background-position:center}
 .swatch{width:34px;height:34px;border-radius:9px;border:2px solid var(--line2);display:inline-block}
 .swatch.on{border-color:var(--acc);box-shadow:0 0 0 2px rgba(200,161,90,.25)}
@@ -442,7 +443,11 @@ const SCALE_HINTS = {
 const scaleRuleOf  = s => SCALE_RULES[s]  || SCALE_RULES['全年龄'];
 const scaleHintOf  = s => SCALE_HINTS[s]  || SCALE_HINTS['全年龄'];
 
-const PERSONS = ['第三人称限定', '第三人称全知', '第一人称'];
+const PERSONS = ['第三人称', '上帝视角'];
+const NARRATOR = '旁白';
+/* 旧存档/旧预设里的名字，读档时翻译过来 */
+const PER_MAP = { '第三人称限定': '第三人称', '第三人称全知': '上帝视角', '第一人称': '第三人称', '第二人称': '第三人称' };
+const normPerson = x => PERSONS.indexOf(x) >= 0 ? x : (PER_MAP[clean(x)] || PERSONS[0]);
 const FOCUSES = ['平衡（人物、景物、动作并重）', '人物内心与关系', '环境与氛围', '动作与事件', '感官细节'];
 
 const REALISM_SPEC = `# 真实感与后果（本局已开启）
@@ -465,7 +470,7 @@ function writeRules(narr) {
 3. **不许替作者收尾**：不要在段末总结、升华、抒情式概括，不要写「然而他并不知道……」「命运的齿轮……」这类旁白，也不要预告接下来会发生什么。
 4. **接得上且不重复**：从「上一段结尾」的下一句直接往下写。不要复述上一段、不要重写最后一句、不要复述账本里已经写明的信息。
 5. **连续性**：与已写段落、账本、世界圣经**不得矛盾**。时间只能前进。同一个人、同一件东西的称呼要前后一致。
-6. **视角纪律**：只写当前视点人物能看到、听到、想到的东西。别的角色知道而视点人物不知道的事，**不许出现在正文里**（连叙述者的口气也不行）。这是最容易写崩的一条。
+6. **视角纪律**：严格遵守上面「叙事视角」那一节定下的写法（谁的眼睛、谁能看见什么）。视点人物看不见的事不许写。
 7. **不堆叠修辞**：不要连续排比，不要把比喻层层叠加（一段最多一处比喻）；宁可写具体的动作与物象。
 8. **内容尺度**：${scale} —— ${scaleRuleOf(scale)}
 9. 正文里不要出现「好的」「以下是」「（注：）」这类助手口吻，也不要 Markdown 标题与分节符号。`;
@@ -592,7 +597,7 @@ function presetToBook(p) {
   w.rules = clean(p.canon); w.threat = clean(p.threat);
   if (STYLE_RULES[p.style]) b.narr.style = p.style;
   if (SCALE_RULES[p.scale]) b.narr.scale = p.scale;
-  if (PERSONS.indexOf(p.person) >= 0) b.narr.person = p.person;
+  b.narr.person = normPerson(p.person);
   if (FOCUSES.indexOf(p.focus) >= 0) b.narr.focus = p.focus;
   b.narr.rules = clean(p.rules); b.narr.bans = clean(p.bans);
 
@@ -673,7 +678,7 @@ function newBook() {
       title: '', tagline: '', era: '', geo: '', races: '', daily: '',
       power: '', powerRank: '', powerCost: '', powerLaw: '', rules: '', threat: '',
     },
-    narr: { person: '第三人称限定', pov: '', style: STYLE_DEFAULT, scale: '成人向剧情', focus: FOCUSES[0], realism: true, bans: '', rules: '' },
+    narr: { person: '第三人称', pov: '', style: STYLE_DEFAULT, scale: '成人向剧情', focus: FOCUSES[0], realism: true, bans: '', rules: '' },
     chapters: [],           // [{id,title,beats:[{id,text,state}]}]  state: '' | cur | done
     paras: [],              // [{id,beatId,pov,text,state}]         state: 'draft' | 'done'
     cards: [],              // 人物卡（静态档案）：{id,name,role,look,persona,back,goal,secret,voice,always}
@@ -704,7 +709,27 @@ function curBeat() {
   const c = curChapter(); if (!c) return null;
   return (c.beats || []).filter(b => b.id === BOOK.cursor.beatId)[0] || null;
 }
-function curPov() { return clean(BOOK.narr.pov) || clean((BOOK.ledger.people[0] || {}).name) || '主角'; }
+function curPov() {
+  const p = clean(BOOK.narr.pov);
+  if (p) return p;
+  return clean((BOOK.ledger.people[0] || {}).name) || '主角';
+}
+const isNarrator = () => clean(BOOK.narr.pov) === NARRATOR;
+/* 视角规矩：第三人称（跟一个人）/ 上帝视角（全知）/ 旁白（不锁定单一人物） */
+function viewRule() {
+  const per = BOOK.narr.person, pov = curPov(), L = [];
+  if (pov === NARRATOR) {
+    L.push('这一段**不锁定某一个人**：用旁白把同时发生的几件事串起来，谁在场写谁，可以让不同角色看到不同的东西。');
+    L.push('切换场景或角色时**另起一段**，给读者一个清楚的落点（时间、地点、谁在说话），不要在一句话里跳。');
+  } else if (per === '上帝视角') {
+    L.push('全知视角：可以写多个角色的所见所想，也可以交代没人在场时发生的事。');
+    L.push('但**一段里不要来回跳**——一处场景写透，切换时另起一段并交代落点。');
+  } else {
+    L.push('只跟视点人物「' + pov + '」：写他看得见、听得到、想得到的。');
+    L.push('他不在场的对话与内幕，**不许出现在正文里**；要写别的角色，只能写他们外在的行为与语言。');
+  }
+  return L.join('\n');
+}
 function charCount(s) { return clean(s).replace(/\s/g, '').length; }
 function bookChars() { return BOOK.paras.reduce((n, p) => n + charCount(p.text), 0); }
 
@@ -831,7 +856,7 @@ function taskBlock(round, partial) {
   const c = curChapter(), b = curBeat();
   const L = [];
   L.push('# 本次任务（以这里为准写这一段）');
-  L.push('- 视点人物：' + curPov() + '（人称：' + BOOK.narr.person + '）');
+  L.push('- 叙事视角：' + BOOK.narr.person + ' · 视点：' + (isNarrator() ? '旁白（不锁定单一人物，同一段里可以出现不同场景与角色）' : curPov()));
   const od = clean(BOOK._dir);
   const bb = (b && clean(b.text)) ? clean(b.text) : '';
   if (od) L.push('- **这一段的剧情（作者刚给的，只能扩写它）**：' + od);
@@ -880,11 +905,7 @@ function buildMessages(round, partial) {
   p.push('# 文风语体：' + styleName + '（硬性要求）\n' + sr.rule + '\n' + (ANCIENT(styleName)
     ? '这一档允许文言腔调与说书腔，不必刻意现代化。'
     : STYLE_BAN + '\n语体由这一档决定，**不要因为世界观“看起来像古代”就自动改用古风**。'));
-  p.push('# 叙事人称：' + nar.person + '\n' + (nar.person === '第三人称全知'
-    ? '可以为不同人物切换视点，但同一个段落里不要跳来跳去——一段只跟一个人。'
-    : nar.person === '第一人称'
-      ? '以视点人物的「我」来写。'
-      : '只跟视点人物，写他看得见、听得到、想得到的。'));
+  p.push('# 叙事视角：' + nar.person + ' · 视点：' + curPov() + '\n' + viewRule());
   if (nar.realism !== false) p.push(REALISM_SPEC);
   p.push(writeRules(nar));
   /* 导演旋钮：节奏 / 情感强度 / 意外性 / 主题 / 长期笔记（从游戏版的上帝视角搬来） */
@@ -1363,12 +1384,13 @@ const FONTS = {
   '黑体': '"PingFang SC","Microsoft YaHei","Heiti SC",sans-serif',
 };
 const THEMES = { dark: '深色', light: '浅色', sepia: '羊皮纸', night: '夜间护眼' };
-let LOOK = { theme: 'dark', accent: '', tx: 15.5, ui: 15, lh: 1.9, maxw: 760, font: '系统默认', bgimg: '' };
+let LOOK = { theme: 'dark', accent: '', txc: '', tx: 15.5, ui: 15, lh: 1.9, maxw: 760, font: '系统默认', bgimg: '' };
 function saveLook() { try { localStorage.setItem('inkhall.look', JSON.stringify(LOOK)); } catch (e) {} }
 function applyLook() {
   const r = document.body.style;      /* 必须写在 body 上：body[data-theme] 规则会盖过 <html> 上的变量 */
   document.body.setAttribute('data-theme', LOOK.theme || 'dark');
   if (LOOK.accent) r.setProperty('--acc', LOOK.accent); else r.removeProperty('--acc');
+  if (LOOK.txc) r.setProperty('--txc', LOOK.txc); else r.removeProperty('--txc');
   r.setProperty('--tx-size', (LOOK.tx || 15.5) + 'px');
   r.setProperty('--ui-size', (LOOK.ui || 15) + 'px');
   r.setProperty('--lh', String(LOOK.lh || 1.9));
@@ -1391,6 +1413,10 @@ function renderLook() {
     + '<label class="swatch' + (LOOK.accent === '' ? ' on' : '') + '" style="background:var(--acc)" title="跟随主题"><input type="radio" name="acc" data-look="accent" data-v="" style="display:none"' + (LOOK.accent === '' ? ' checked' : '') + '></label>'
     + sw.slice(1).map(c => '<label class="swatch' + (LOOK.accent === c ? ' on' : '') + '" style="background:' + c + '"><input type="radio" name="acc" data-look="accent" data-v="' + c + '" style="display:none"' + (LOOK.accent === c ? ' checked' : '') + '></label>').join('')
     + '<input class="f" type="color" data-look="accent" value="' + esc(LOOK.accent || '#c8a15a') + '" style="width:52px;padding:2px"></div>'
+    + '<label class="lab"><b>正文字体颜色</b></label><div class="row wrap">'
+    + '<button class="btn sm" data-look="txc" data-v="" style="' + (LOOK.txc ? '' : 'border-color:var(--acc);color:var(--acc)') + '">跟随主题</button>'
+    + '<input class="f" type="color" data-look="txc" value="' + esc(LOOK.txc || '#ccd3e0') + '" style="width:52px;padding:2px">'
+    + '</div>'
     + '<label class="lab"><b>正文字体</b></label><select class="f" data-look="font">' + Object.keys(FONTS).map(fontOpt).join('') + '</select>'
     + num('tx', '正文字号', 13, 24, 0.5, 'px')
     + num('lh', '行高', 1.4, 2.6, 0.05, '') + num('maxw', '正文宽度', 480, 1200, 20, 'px') + num('ui', '界面字号', 13, 19, 0.5, 'px')
@@ -1482,10 +1508,8 @@ function renderDoc() {
 function humanOf(name) { return (BOOK.ledger.people || []).filter(p => clean(p.name) === clean(name))[0] || null; }
 function cardOf(name) { return BOOK.cards.filter(c => clean(c.name) === clean(name))[0] || null; }
 function renderPeople() {
-  const names = [];
-  BOOK.cards.forEach(c => { if (clean(c.name) && names.indexOf(clean(c.name)) < 0) names.push(clean(c.name)); });
-  (BOOK.ledger.people || []).forEach(p => { if (clean(p.name) && names.indexOf(clean(p.name)) < 0) names.push(clean(p.name)); });
-  $('#povTop').innerHTML = '<option value="">（未设）</option>' + names.map(n =>
+  const names = allNames();
+  $('#povTop').innerHTML = '<option value="">（未设）</option>' + [NARRATOR].concat(names).map(n =>
     '<option value="' + esc(n) + '"' + (n === BOOK.narr.pov ? ' selected' : '') + '>' + esc(n) + '</option>').join('');
 
   if (!names.length) {
@@ -1876,15 +1900,15 @@ function allNames() {
 }
 function openViewpoint() {
   const names = allNames();
+  const list = [NARRATOR].concat(names);
   const last = BOOK.paras.slice(-1)[0];
   const person = BOOK.narr.person, pov = curPov();
   openSheet('<button class="close" data-x="1">✕</button><h3>👁 视点</h3>'
     + '<div class="mut" style="margin-top:6px">这一段用谁的眼睛讲故事。人称与视点人物是两件事，分开设。</div>'
     + '<label class="lab"><b>人称</b></label><div class="row wrap">'
     + PERSONS.map(x => '<button class="btn sm" data-vpx="person" data-v="' + esc(x) + '" style="' + (x === person ? 'border-color:var(--acc);color:var(--acc)' : '') + '">' + esc(x) + '</button>').join('') + '</div>'
-    + '<label class="lab"><b>视点人物</b></label><div class="row wrap">'
-    + (names.length ? names.map(n => '<button class="btn sm" data-vpx="pov" data-v="' + esc(n) + '" style="' + (n === pov ? 'border-color:var(--acc);color:var(--acc)' : '') + '">' + esc(n) + '</button>').join('')
-      : '<span class="mut">还没有人物卡，先去「人物」建一个</span>') + '</div>'
+    + '<label class="lab"><b>视点人物</b>（“旁白”＝不锁定某一个人，适合同一段里换场景与角色）</label><div class="row wrap">'
+    + list.map(n => '<button class="btn sm" data-vpx="pov" data-v="' + esc(n) + '" style="' + (n === pov ? 'border-color:var(--acc);color:var(--acc)' : '') + '">' + esc(n) + '</button>').join('') + '</div>'
     + '<div class="card" style="margin-top:12px"><div class="mut">上一段用的是：<b>' + (last ? esc(last.pov || '未设') : '（还没写过）') + '</b>'
     + (last && last.pov && last.pov !== pov ? '<br><b style="color:var(--acc)">注意：和当前视点不一样，往下写就是切视角了。</b>' : '') + '</div></div>');
   $('#sheetPanel').onclick = ev => {
@@ -2104,6 +2128,7 @@ $('#cfgThink').onchange = e => { CFG.think = e.target.value; saveCfg(); };
   const W0 = newBook().world;
   Object.keys(W0).forEach(k => { if (BOOK.world[k] == null) BOOK.world[k] = W0[k]; });
   if (!BOOK.narr) BOOK.narr = newBook().narr;
+  BOOK.narr.person = normPerson(BOOK.narr.person);
   if (!BOOK.dice || !arr(BOOK.dice.table).length) BOOK.dice = Object.assign(newBook().dice, BOOK.dice && BOOK.dice.last ? { last: BOOK.dice.last } : {});
   if (!BOOK.cursor) BOOK.cursor = { chapterId: '', beatId: '' };
   if (!BOOK.chapters.length) {
