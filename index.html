@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#0a0c11">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Inkhall">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Inkhall</title>
+<style>
+:root{
+  --bg:#0a0c11; --bg2:#11151d; --bg3:#171c26; --line:#232b3a; --line2:#2b3446;
+  --fg:#e6e9f0; --fg2:#b9c2d2; --mut:#7d8698; --acc:#c8a15a; --accd:#2a2116;
+  --blue:#7fb6f0; --green:#6fd39a; --red:#e08a8a;
+  --app-h:100vh;
+}
+@supports (height:100dvh){ :root{ --app-h:100dvh; } }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Segoe UI",sans-serif;
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+input,textarea,select,button{font-family:inherit;font-size:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#2b3446;border-radius:3px}
+
+#app{height:var(--app-h);display:flex;flex-direction:column;overflow:hidden}
+
+/* ---- 顶栏 ---- */
+#top{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-bottom:1px solid var(--line);background:var(--bg2)}
+#top .brand{font-weight:600;letter-spacing:.3px;white-space:nowrap}
+#top .brand i{color:var(--acc);font-style:normal}
+#bookTitle{flex:1;min-width:0;text-align:center;color:var(--fg2);font-size:14px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iconbtn{width:34px;height:34px;border-radius:9px;background:var(--bg3);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 auto}
+
+/* ---- 主体 ---- */
+#main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.view{display:none;padding:12px 12px 18px}
+.view.on{display:block}
+h2.sec{font-size:13px;color:var(--acc);letter-spacing:1px;margin:16px 0 8px;font-weight:600}
+h2.sec:first-child{margin-top:4px}
+.card{background:var(--bg3);border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:10px}
+.mut{color:var(--mut);font-size:12.5px;line-height:1.7}
+.row{display:flex;gap:8px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.sep{height:1px;background:var(--line);margin:10px 0}
+
+input.f,textarea.f,select.f{width:100%;background:#0e1219;border:1px solid var(--line);
+  border-radius:9px;padding:8px 10px;color:var(--fg);outline:none;font-size:14px}
+input.f:focus,textarea.f:focus{border-color:var(--line2)}
+textarea.f{resize:vertical;line-height:1.6}
+label.lab{display:block;font-size:12.5px;color:var(--mut);margin:10px 0 4px}
+label.lab b{color:var(--fg2);font-weight:400}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  background:var(--bg3);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;
+  font-size:13.5px;color:var(--fg2);white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--accd);border-color:#6b5326;color:#e8d5ac}
+.btn.ghost{background:transparent}
+.btn.wide{width:100%;margin-top:4px}
+.btn.sm{padding:6px 10px;font-size:12.5px;border-radius:8px}
+.btn:disabled{opacity:.45}
+
+.tag{font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--mut);white-space:nowrap}
+.tag.g{color:var(--green);border-color:#22543a;background:#14301f}
+.tag.b{color:var(--blue);border-color:#2b4468;background:#17253a}
+.tag.a{color:var(--acc);border-color:#5a4620;background:#2e2513}
+
+/* ---- 故事板 ---- */
+.chap{margin-top:14px}
+.chap-hd{display:flex;align-items:center;gap:8px;color:var(--acc);font-size:14px}
+.chap-hd input{flex:1;min-width:0;background:transparent;border:0;color:var(--acc);font-weight:600;outline:none;padding:4px 0}
+.chap-hd .cnt{color:var(--mut);font-size:12px}
+.beat{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border-radius:11px;
+  border:1px solid transparent;margin-top:6px}
+.beat.done{color:var(--mut)}
+.beat.cur{background:#1b2231;border-color:#3a4460}
+.beat .dot{width:9px;height:9px;border-radius:50%;background:#3d4759;margin-top:7px;flex:0 0 auto}
+.beat.cur .dot{background:var(--acc);box-shadow:0 0 0 4px rgba(200,161,90,.15)}
+.beat.done .dot{background:#4a7f5f}
+.beat .txt{flex:1;min-width:0;background:transparent;border:0;outline:none;color:inherit;
+  font-size:14.5px;line-height:1.55;resize:none;overflow:hidden;padding:0}
+.beat .acts{display:flex;gap:4px;flex:0 0 auto}
+.mini{font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--line2);color:var(--fg2);background:#141922}
+
+/* ---- 文稿 ---- */
+#docHead{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:0 2px 10px;position:sticky;top:0;background:var(--bg);z-index:4}
+#docHead .t{font-size:13.5px;color:var(--fg2)}
+#docHead .t em{font-style:normal;color:var(--mut)}
+.para{position:relative;padding:12px 13px;border-radius:12px;background:#141922;
+  border:1px solid transparent;border-left:2px solid #2b3446;margin-bottom:10px;font-size:15.5px;
+  line-height:1.9;color:#ccd3e0;white-space:pre-wrap;word-break:break-word}
+.para.draft{border:1px dashed #3a4460;border-left:2px solid var(--acc);background:#191e28}
+.para .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.para .pov{font-size:11.5px;color:var(--fg2);background:#1b2231;border-radius:6px;padding:2px 8px}
+.para .st{font-size:11.5px;color:var(--mut)}
+.para.draft .st{color:var(--acc)}
+.para .tools{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.para textarea.edit{width:100%;min-height:120px;background:#0e1219;border:1px solid var(--blue);
+  border-radius:10px;padding:9px;color:var(--fg);font-size:15px;line-height:1.9;outline:none;resize:vertical}
+.empty{text-align:center;color:var(--mut);font-size:13px;padding:34px 10px;line-height:1.9}
+
+#writebar{position:sticky;bottom:0;z-index:6;display:flex;gap:7px;flex-wrap:wrap;
+  background:rgba(14,18,25,.94);backdrop-filter:blur(10px);border:1px solid var(--line);
+  border-radius:14px;padding:9px;margin-top:6px}
+#dicePend{display:flex;align-items:center;gap:6px;width:100%;font-size:12.5px;color:var(--blue)}
+
+/* ---- 账本 / 幕后 ---- */
+.kv{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--mut);font-size:12.5px;flex:0 0 62px}
+.kv .v{flex:1;min-width:0}
+.kv input.f,.kv textarea.f{padding:6px 8px;font-size:13.5px}
+.fact{font-size:13px;color:var(--fg2);line-height:1.7;padding-left:14px;position:relative}
+.fact:before{content:"·";position:absolute;left:3px;color:var(--mut)}
+.person{margin-bottom:12px}
+.person .nm{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.person .nm input{background:transparent;border:0;outline:none;color:var(--fg);font-weight:600;font-size:15px;flex:1;min-width:0}
+
+/* ---- 弹层 ---- */
+#sheet{position:fixed;inset:0;z-index:60;display:none}
+#sheet.on{display:block}
+#sheet .mask{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+#sheet .panel{position:absolute;left:0;right:0;bottom:0;max-height:86%;overflow-y:auto;
+  background:var(--bg2);border-top:1px solid var(--line2);border-radius:18px 18px 0 0;
+  padding:14px 14px calc(20px + env(safe-area-inset-bottom,0px))}
+#sheet .panel h3{font-size:16px;margin-bottom:4px}
+#sheet .panel .close{position:absolute;right:12px;top:12px;color:var(--mut);font-size:20px}
+
+#toasts{position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:80;display:flex;
+  flex-direction:column;gap:6px;align-items:center;width:max-content;max-width:92vw;pointer-events:none}
+#updateBar{position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:75;
+  background:var(--bg3);border:1px solid var(--acc);border-radius:12px;padding:9px 12px;
+  display:flex;align-items:center;gap:9px;font-size:13.5px;max-width:92vw;
+  box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#updateBar[hidden]{display:none}
+#updateBar:not([hidden]) + #toasts{bottom:calc(130px + env(safe-area-inset-bottom,0px))}
+.toast{background:rgba(28,35,49,.97);border:1px solid var(--line2);color:var(--fg);
+  padding:9px 13px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.5);line-height:1.6}
+
+/* ---- 底栏 ---- */
+#tabs{flex:0 0 auto;display:flex;border-top:1px solid var(--line);background:var(--bg2);
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+#tabs button{flex:1;padding:11px 0 12px;font-size:12.5px;color:var(--mut);
+  display:flex;flex-direction:column;align-items:center;gap:3px}
+#tabs button i{font-style:normal;font-size:17px;line-height:1}
+#tabs button.on{color:var(--acc)}
+
+/* 生成中 */
+#busy{position:fixed;inset:0;z-index:70;display:none;background:rgba(6,8,12,.55);
+  align-items:center;justify-content:center;flex-direction:column;gap:12px}
+#busy.on{display:flex}
+.spin{width:34px;height:34px;border:3px solid #2b3446;border-top-color:var(--acc);
+  border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#busyTxt{font-size:13px;color:var(--fg2);max-width:80vw;text-align:center;line-height:1.7}
+.cursor{display:inline-block;width:2px;height:16px;background:var(--acc);vertical-align:-3px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+
+/* ============================================================================
+   外观：主题 / 字号 / 行高 / 字体 / 正文宽度 / 背景图（都存 airpg 同级的 inkhall.look）
+   ============================================================================ */
+:root{
+  --tx-size:15.5px; --ui-size:15px; --lh:1.9; --maxw:760px;
+  --in:#0e1219; --para:#141922; --para2:#191e28; --bar:rgba(14,18,25,.94); --toast:rgba(28,35,49,.97);
+  --font-body:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Segoe UI",sans-serif;
+}
+body{font-size:var(--ui-size)}
+.para{font-size:var(--tx-size);line-height:var(--lh);font-family:var(--font-body)}
+#paras,#writebar,#dirCard{max-width:var(--maxw);margin-left:auto;margin-right:auto}
+input.f,textarea.f,select.f{background:var(--in)}
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;padding:0;height:28px;border:0}
+input[type=range]::-webkit-slider-runnable-track{height:5px;background:var(--line2);border-radius:3px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;margin-top:-8px;border-radius:50%;background:var(--acc);border:2px solid var(--bg2)}
+.para{background:var(--para)}
+.para.draft{background:var(--para2)}
+#writebar{background:var(--bar)}
+.toast{background:var(--toast)}
+textarea.edit{background:var(--in)}
+body[data-theme="light"]{--bg:#f6f3ec;--bg2:#fff;--bg3:#fff;--line:#e3ded3;--line2:#cbc3b2;--fg:#26221b;--fg2:#4c453a;--mut:#8a8171;--acc:#a06f22;--accd:#f2e3c8;--in:#fff;--para:#fff;--para2:#fffdf7;--bar:rgba(255,255,255,.94);--toast:rgba(255,255,255,.98);--blue:#3d6fa8;--green:#2f7a52;--red:#a8443f}
+body[data-theme="sepia"]{--bg:#efe6d5;--bg2:#f8f1e3;--bg3:#f8f1e3;--line:#ded1b9;--line2:#c7b593;--fg:#2e2519;--fg2:#574a37;--mut:#8b7a5f;--acc:#8a5a1e;--accd:#eddfc2;--in:#fffaf0;--para:#fffaf0;--para2:#fdf5e6;--bar:rgba(248,241,227,.95);--toast:rgba(248,241,227,.98);--blue:#3f6a8c;--green:#3f6b4a;--red:#9c4a3a}
+body[data-theme="night"]{--bg:#0f1412;--bg2:#151c19;--bg3:#1a231f;--line:#26332d;--line2:#33443c;--fg:#dfe8e2;--fg2:#b3c2b9;--mut:#7f8f87;--acc:#7fc7a0;--accd:#1d2b23;--in:#0c110f;--para:#141b18;--para2:#18211d;--bar:rgba(15,20,18,.94);--toast:rgba(26,35,31,.97)}
+body{background-size:cover;background-attachment:fixed;background-position:center}
+.swatch{width:34px;height:34px;border-radius:9px;border:2px solid var(--line2);display:inline-block}
+.swatch.on{border-color:var(--acc);box-shadow:0 0 0 2px rgba(200,161,90,.25)}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="top">
+    <button class="iconbtn" id="btnMenu">☰</button>
+    <div id="bookTitle">未命名</div>
+    <button class="iconbtn" id="btnQuick">⋯</button>
+  </div>
+
+  <div id="main">
+
+    <!-- ============ 故事板 ============ -->
+    <section class="view on" id="view-board">
+      <div class="card" id="worldCard"></div>
+      <div class="card" id="progressCard"></div>
+      <div id="chapters"></div>
+      <button class="btn wide" id="btnAddChapter">＋ 新建章节</button>
+      <h2 class="sec">随手记</h2>
+      <div class="card">
+        <textarea class="f" id="quickIdea" rows="3"
+          placeholder="一句话灵感 / 一段梗概 / 一整章大纲 —— 三种都可以直接写在这儿，再决定挂到哪一章。"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn sm grow" id="btnQuickAdd">加入当前章节末尾</button>
+          <select class="f" id="quickKind" style="width:auto">
+            <option value="beat">当 beat</option><option value="chapter">当新章节</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 文稿 ============ -->
+    <section class="view" id="view-doc">
+      <div id="docHead"></div>
+      <div id="paras"></div>
+      <div class="card" id="dirCard">
+        <div class="row"><b class="grow" style="color:var(--acc)">下一段要发生什么</b>
+          <button class="mini" id="btnViewpoint">👁 视点</button></div>
+        <div class="mut" id="vpLine" style="margin-top:4px"></div>
+        <textarea class="f" id="dirBox" rows="2" style="margin-top:8px"
+          placeholder="例：她在天桥下被人拦住，对方一眼认出她的家徽。&#10;一句话也行。留空就顺着上文往下写。"></textarea>
+        <div class="row wrap" style="margin-top:8px">
+          <button class="btn pri grow" id="btnWriteDir">✍ 按这个写一段</button>
+          <button class="btn" id="btnWriteFree">顺写</button>
+          <button class="btn" id="btnDirToBoard">存入故事板</button>
+        </div>
+      </div>
+      <div id="writebar">
+        <div id="dicePend" hidden></div>
+        <button class="btn grow" id="btnRewrite">↻ 重写末段</button>
+        <button class="btn" id="btnDice">🎲 掷骰</button>
+        <button class="btn" id="btnManual">✎ 手写一段</button>
+      </div>
+    </section>
+
+    <!-- ============ 人物 ============ -->
+    <section class="view" id="view-people">
+      <div class="card">
+        <div class="mut">两张表是同一批人：<b>人物卡</b>是静态档案（写的时候每段都要看），
+          <b>当前状态</b>是动态的（由账本自动更新，也可以自己改）。</div>
+        <label class="lab"><b>这一段跟谁说故事（视点人物）</b></label>
+        <select class="f" id="povTop"></select>
+      </div>
+      <div id="peopleView"></div>
+      <button class="btn wide" id="btnAddCard">＋ 新建人物卡</button>
+    </section>
+
+    <!-- ============ 世界书 ============ -->
+    <section class="view" id="view-codex">
+      <div class="card">
+        <div class="mut">世界书是<b>按需调用</b>的：只有命中了当前剧情 / 视点人物的条目才会被送进提示词，
+          没命中的不会占 token。想让它每段都在，就打开「常驻」。</div>
+        <div class="row wrap" style="margin-top:9px">
+          <select class="f" id="codexKind" style="width:auto">
+            <option value="all">全部类别</option><option>地理与地点</option><option>势力与组织</option>
+            <option>规则与力量</option><option>物品与资源</option><option>历史与事件</option><option>其他</option>
+          </select>
+          <input class="f grow" id="codexSearch" placeholder="搜条目名 / 别名 / 正文">
+        </div>
+        <div class="row" style="margin-top:9px">
+          <label class="lab" style="margin:0;flex:1"><b>调用方式</b></label>
+          <select class="f" id="cfgPick" style="width:auto">
+            <option value="local">本地命中（免费、可预期）</option>
+            <option value="ai">让 AI 自己挑（多一次小请求）</option>
+          </select>
+        </div>
+        <div class="mut" id="pickHint" style="margin-top:6px"></div>
+      </div>
+      <h2 class="sec">世界核心（常驻，每段都带）</h2>
+      <div id="coreView"></div>
+      <h2 class="sec">条目</h2>
+      <div id="codexView"></div>
+      <button class="btn wide" id="btnAddCodex">＋ 新建条目</button>
+      <h2 class="sec">伏笔台账</h2>
+      <div id="threads"></div>
+      <button class="btn wide" id="btnAddThread">＋ 添加伏笔</button>
+      <h2 class="sec">道具与物品</h2>
+      <div id="props"></div>
+      <button class="btn wide" id="btnAddProp">＋ 添加道具</button>
+    </section>
+
+    <!-- ============ 幕后（上帝视角） ============ -->
+    <section class="view" id="view-god">
+      <div class="card">
+        <div class="row"><b style="color:var(--acc)">👁 上帝视角</b>
+          <span class="tag a">AI 每段自动维护</span></div>
+        <div class="mut" style="margin-top:6px">这里是你（作者）才看得到的东西。正文里一个字都不会出现；
+          它想加却没敢加的剧情，会被收在「它能想到的后续」里，等你自己挑。</div>
+      </div>
+      <div id="godCfg"></div>
+      <div id="godBody"></div>
+    </section>
+
+    <!-- ============ 外观 ============ -->
+    <section class="view" id="view-look">
+      <div id="lookBody"></div>
+    </section>
+
+    <!-- ============ 世界设定 ============ -->
+    <section class="view" id="view-setup">
+      <div class="row wrap" style="margin-bottom:10px">
+        <button class="btn sm" id="btnImportWorld">⬆ 导入设定（吃 Talehall 导出的 JSON）</button>
+        <button class="btn sm" id="btnExportWorld">⬇ 导出设定</button>
+      </div>
+      <div id="setupBody"></div>
+    </section>
+
+    <!-- ============ 接口 ============ -->
+    <section class="view" id="view-api">
+      <div class="card">
+        <label class="lab"><b>接口地址</b>（OpenAI 兼容的 chat/completions）</label>
+        <input class="f" id="cfgApiUrl" placeholder="https://api.deepseek.com/v1/chat/completions">
+        <label class="lab"><b>API Key</b>（只存在这台设备的 localStorage，不上传）</label>
+        <input class="f" id="cfgApiKey" type="password" placeholder="sk-...">
+        <label class="lab"><b>模型名</b></label>
+        <input class="f" id="cfgModel" list="modelList" placeholder="deepseek-chat">
+        <datalist id="modelList"></datalist>
+        <div class="row" style="margin-top:8px">
+          <button class="btn sm" id="btnModels">拉取模型列表</button>
+          <button class="btn sm" id="btnTest">测试连接</button>
+        </div>
+        <div class="mut" id="modelHint" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <label class="lab"><b>温度</b>（越高越飘，写作建议 0.85～1.0）</label>
+        <input class="f" id="cfgTemp" type="number" step="0.05" min="0" max="2">
+        <label class="lab"><b>思考程度</b>（写作用「关闭」最省钱也最长）</label>
+        <select class="f" id="cfgThink"></select>
+        <label class="lab"><b>额外请求参数</b>（JSON，可留空）</label>
+        <input class="f" id="cfgExtra" placeholder='{"max_tokens": 4096}'>
+        <label class="lab"><b>流式输出</b></label>
+        <select class="f" id="cfgStream"><option value="1">开启（边写边显示）</option><option value="0">关闭</option></select>
+      </div>
+      <div class="card">
+        <div class="row"><b class="grow">用量统计</b><button class="btn sm" id="btnStats">展开</button></div>
+        <div class="mut" id="statsBox" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <div class="mut">写作设置</div>
+        <label class="lab"><b>每段目标字数</b></label>
+        <input class="f" id="cfgLen" type="number" min="200" max="4000" step="50">
+        <div class="mut" style="margin-top:6px">不够这个字数时应用会自动接着发请求，直到凑够或连续三次都没进展为止。</div>
+      </div>
+    </section>
+
+  </div>
+
+  <nav id="tabs">
+    <button data-v="board" class="on"><i>▤</i>故事板</button>
+    <button data-v="doc"><i>✎</i>文稿</button>
+    <button data-v="people"><i>☺</i>人物</button>
+    <button data-v="codex"><i>❖</i>世界书</button>
+    <button data-v="god"><i>👁</i>幕后</button>
+  </nav>
+</div>
+
+<div id="sheet"><div class="mask"></div><div class="panel" id="sheetPanel"></div></div>
+<div id="updateBar" hidden>
+  <span id="updateText"></span>
+  <button class="btn sm" id="btnUpdateNow">立即刷新</button>
+  <button class="btn sm" id="btnUpdateLater">稍后</button>
+</div>
+<div id="toasts"></div>
+<div id="busy"><div class="spin"></div><div id="busyTxt">正在写…</div><button class="btn sm" id="btnStop" style="display:none">中断</button></div>
+
+<script>
+/* ============================================================================
+   Inkhall —— 给一个人用的 AI 小说扩写台
+   ----------------------------------------------------------------------------
+   分工：作者给剧情（一句话 / 一段梗概 / 整章大纲），AI 只负责扩写成正文。
+   AI 拿不到发号施令的权力：它想加的情节只能写进「幕后 → 它能想到的后续」。
+   游戏版 Talehall 是另一个项目，两者互不影响。
+   ============================================================================ */
+'use strict';
+
+const $  = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const arr = v => Array.isArray(v) ? v.filter(x => x != null && String(x).trim() !== '') : [];
+const clean = s => String(s == null ? '' : s).trim();
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+const K = { book: 'inkhall.book', cfg: 'inkhall.cfg', models: 'inkhall.models' };
+
+/* ------------------------------------------------------------------ 文风 */
+const STYLE_RULES = {
+  '现代白话（通用）': { hint: '干净利落的现代汉语，像当代小说。最保险的一档。',
+    rule: '用现代汉语白话写作，句式干净利落，像当代小说。具体优先于修辞。' },
+  '欧陆奇幻（翻译腔）': { hint: '西方奇幻的标准译笔：现代汉语 + 偏欧化句式，不用中式古风词。',
+    rule: '用现代汉语白话写作，带小说译本的语感：句式可以偏欧化（从句、插入语、较长的主语），重具体物象与动作，少用成语。人名地名的音译质感要保留。' },
+  '冷硬简练': { hint: '短句、克制、不抒情，像硬派侦探小说。',
+    rule: '用现代汉语写作，短句为主，克制、不抒情、不过度形容；省略与留白多于解释。' },
+  '轻小说口语': { hint: '轻快口语化，允许内心吐槽。',
+    rule: '用现代汉语口语写作，轻松、有节奏感，口语词汇与短促的内心吐槽都可以用。' },
+  '中式古典（半文半白）': { hint: '半文半白，中式中古 / 武侠的语感。',
+    rule: '用半文半白的书面语写作：可适度使用文言虚词与四字句，也可以有说书腔，但不要写成纯文言。' },
+  '志怪传奇（笔记体）': { hint: '简古的笔记体，克制、留白、不解释。',
+    rule: '用简古的笔记体写作：句子短，语气平，少形容词，不解释因果，留白多于铺陈。' },
+};
+const STYLE_DEFAULT = '现代白话（通用）';
+const STYLE_BAN = '**禁止**：文言虚词（之 / 其 / 乃 / 焉 / 矣 / 乎 / 兮 / 尔 / 汝）、「……者，……也」句式、'
+  + '四字成语堆砌与对仗排比、「只见 / 但见 / 话说 / 却说 / 且说」这类说书腔、'
+  + '「在下 / 鄙人 / 阁下幸甚」等古称作叙述、以及「遂 / 便 / 竟 / 方才 / 随即」这类叙事连接词。'
+  + '人物本身可以文雅，但**叙述者的语言必须是现代的**。';
+const styleRuleOf = n => STYLE_RULES[n] || STYLE_RULES[STYLE_DEFAULT];
+const ANCIENT = n => /古典|志怪/.test(n || '');
+
+/* ------------------------------------------------------------------ 尺度 */
+const SCALE_RULES = {
+  '全年龄': '暴力与情欲都点到为止，以暗示、氛围与留白处理，不写生理细节与直白情欲。紧张、危险、悲伤都可以有，但不写血腥内脏，也不写性。',
+  '成人向剧情': '允许成人向的题材：暴力、情欲、成瘾、道德困境都按剧情需要写实处理，不回避、不强行拔高。暴力可以具体，情欲以氛围、心理与留白为主，不逐帧铺陈。',
+  '黑暗残酷': '允许血腥、虐待、酷刑、处决这类残酷场面写到生理细节，不美化、不回避；情欲仍以含蓄与留白为主，不写色情细节。',
+  '无限制': '不再自我设限：暴力、性、成瘾与禁忌题材都可以按剧情需要直接描写，该写细节就写细节，不要用「此处省略」「为免不适略过」带过，也不要附加道德说教与免责声明。本局尺度就以上面这一行为准，不要自行降级题材、不要因为敏感就回避冲突或敷衍带过。唯一例外是作者在「禁止出现的内容」里写明排除的东西。',
+};
+const SCALE_HINTS = {
+  '全年龄': '点到为止：气氛与留白为主，不写具体细节。',
+  '成人向剧情': '按剧情需要写实处理，不回避、也不强行拔高。',
+  '黑暗残酷': '不作美化处理：该写的场面照写，不回避。',
+  '无限制': '不再自我删减：以本局设定为准，不加说教。',
+};
+const scaleRuleOf  = s => SCALE_RULES[s]  || SCALE_RULES['全年龄'];
+const scaleHintOf  = s => SCALE_HINTS[s]  || SCALE_HINTS['全年龄'];
+
+const PERSONS = ['第三人称限定', '第三人称全知', '第一人称'];
+const FOCUSES = ['平衡（人物、景物、动作并重）', '人物内心与关系', '环境与氛围', '动作与事件', '感官细节'];
+
+const REALISM_SPEC = `# 真实感与后果（本局已开启）
+追求**可信**而非**顺利**。世界不围着主角转，做了事就有对应的代价：
+- 后果不可撤：伤口会留疤、会残；钱花完就是花完；话说出去收不回来。
+- NPC 是独立的人：他们有自己的账单、家人、底线与恐惧，不会因为主角是主角就迁就他。
+- 社会质感：物价与购买力、天气与季节、气味与声音、街上的谣言、办事流程的繁琐，都要照实写。
+- 信息永远不完整：传言有偏差，人会撒谎、会记错、会为了面子夸大。
+- 暴力的余波：打斗会累、会失手、会误伤；人死了有尸体要处理、有家属会记仇。
+- 时间在流：主角不在场时世界也在动，他回来时局面应该已经变了。
+- 道德灰色：不做道德审判、不给标准答案。`;
+
+/* ------------------------------------------------------------------ 铁律 */
+function writeRules(narr) {
+  const scale = narr.scale || '成人向剧情';
+  return `# 写作铁律（优先级最高，与「世界圣经」冲突时以这里为准）
+
+1. **只写作者给的东西**：这一段要发生什么，以「本次任务」里的 beat 为准。你负责把它变成好文字，不负责改剧情。
+2. **不许新增情节与设定**：不要自作主张加入新人物、新事件、新转折、新谜团，也**不许自己发明世界观设定**——设定只能用「世界核心」与「本段载入的设定条目」里出现的。你觉得该加的东西，写进幕后块的 hooks，**一个字都不要写进正文**。
+3. **不许替作者收尾**：不要在段末总结、升华、抒情式概括，不要写「然而他并不知道……」「命运的齿轮……」这类旁白，也不要预告接下来会发生什么。
+4. **接得上且不重复**：从「上一段结尾」的下一句直接往下写。不要复述上一段、不要重写最后一句、不要复述账本里已经写明的信息。
+5. **连续性**：与已写段落、账本、世界圣经**不得矛盾**。时间只能前进。同一个人、同一件东西的称呼要前后一致。
+6. **视角纪律**：只写当前视点人物能看到、听到、想到的东西。别的角色知道而视点人物不知道的事，**不许出现在正文里**（连叙述者的口气也不行）。这是最容易写崩的一条。
+7. **不堆叠修辞**：不要连续排比，不要把比喻层层叠加（一段最多一处比喻）；宁可写具体的动作与物象。
+8. **内容尺度**：${scale} —— ${scaleRuleOf(scale)}
+9. 正文里不要出现「好的」「以下是」「（注：）」这类助手口吻，也不要 Markdown 标题与分节符号。`;
+}
+
+/* -------------------------------------------------------- 输出契约 / 账本 */
+function outputSpec(godOn) {
+  return `# 输出格式（必须遵守）
+
+每次回复分两部分，顺序固定：
+
+【一】正文：纯粹的小说正文，纯文本。不要在正文里出现任何协议块或括号注释。
+【二】状态块：正文结束后另起一行，输出：
+
+<<<LEDGER>>>
+{ …账本变化… }
+<<<END>>>
+` + (godOn ? `
+<<<GOD>>>
+{ …幕后… }
+<<<END>>>
+` : '') + `
+规则：
+- 每个块都必须是能被 JSON.parse 直接解析的合法 JSON：不要代码围栏、不要注释、不要尾逗号、不要省略引号。
+- 账本块**只写这一段落里发生变化的字段**（没变的省略，应用会保留旧值；数组一旦给出就整体覆盖）。
+- 若本段确实什么都没变，可以省略整个块，但正文必须照写。
+- 这些块不会出现在给读者看的稿子里，它们只用来更新界面。`;
+}
+
+/* 导演旋钮（从游戏版的上帝视角搬来，但对写作有意义的三项） */
+const PACES = ['强制放缓：用大量环境、感官与心理细节铺陈，不要让事件推进', '明显放缓，多写氛围与细节',
+  '略慢，注重过程描写', '保持自然节奏', '略快，减少过渡描写', '明显加快，尽快推进到下一个节点',
+  '强制跳进：直接跳过过程，抵达下一个关键节点，用简短的过渡句带过'];
+const EMOTIONS = ['克制冷静，不渲染情绪', '轻微情感着色', '适度情感描写', '情感充沛，多写内心波动',
+  '强烈情感冲击，允许煊情', '极致情感张力，追求让人揪心'];
+const SURPRISE = ['严格按逻辑推进，不要意外', '几乎不引入意外', '偶尔有小的意外',
+  '适度反套路，避免剧情走成套路', '经常给出意料之外的转折', '极度不可预测'];
+const DIR_DEFAULT = { pace: 3, emotion: 2, surprise: 3, theme: '', note: '' };
+function DIR() { if (!BOOK.dir || typeof BOOK.dir !== 'object') BOOK.dir = Object.assign({}, DIR_DEFAULT); return BOOK.dir; }
+function godOn() { return CFG.godOn !== false; }
+function factsOf() { return arr(BOOK.facts); }
+
+const LEDGER_SPEC = `# 账本（Ledger）字段说明
+
+{
+  "time": "故事内的时间，沿用世界观的历法写法",
+  "place": "当前地点",
+  "pov": "这一段的视点人物",
+  "people": [{
+    "name": "姓名", "role": "身份",
+    "where": "此刻在哪",
+    "body": "身体状况：伤势、疲惫、衣着",
+    "mood": "情绪与心理状态",
+    "goal": "此刻想要什么",
+    "items": ["随身携带的东西"],
+    "knows": ["这个人已经知道的事，一句话一条"],
+    "unaware": ["这个人还不知道、但别的角色或读者已知的事"]
+  }],
+  "threads": [{ "name": "伏笔名", "state": "已埋 | 已回收", "note": "一句话" }],
+  "props": [{ "name": "道具名", "holder": "在谁手上", "note": "状态" }],
+  "summary": "这一段落发生了什么，一到两句，用作长期记忆"
+}
+
+- people 里**至少要有当前视点人物**，其他出场人物按需给。
+- knows / unaware 是信息隔离的关键：后续只有 knows 里的东西会被当成“这个人该知道的”。
+- threads 是伏笔台账：新埋的写「已埋」，已回收的改成「已回收」。`;
+
+const GOD_SPEC = `# 幕后块（God）——只给作者看，绝不进正文
+
+{
+  "truth": "这一段的隐情 / 尚未揭破的真相，一到两句",
+  "agenda": ["作者视野之外正在发生的事情，2~4 条"],
+  "foreshadow": ["已经埋下、还没回收的伏笔，1~4 条；没有就给空数组"],
+  "if_inaction": "如果作者什么都不安排，事情会往哪走",
+  "hooks": [{ "label": "不超过 12 字", "desc": "一句话：接下来可以怎么走" }],
+  "risks": ["当前故事里可能存在的矛盾、漏洞或盲区"]
+}
+
+- hooks 是你**想加进正文但忍住了**的剧情可能，只允许出现在这里，供作者挑选。
+- risks 要真的挑毛病：时间对不上、人物行为不合理、与前面某段冲突，都要指出来。`;
+
+const THINK_MODES = [
+  { key: 'off',  label: '关闭（写作推荐，省 token）', p: {} },
+  { key: 'low',  label: '低', p: { reasoning_effort: 'low' } },
+  { key: 'mid',  label: '中', p: { reasoning_effort: 'medium' } },
+  { key: 'high', label: '高（很贵，慎用）', p: { reasoning_effort: 'high' } },
+];
+
+const DICE_DEFAULT = [
+  { face: 1, label: '阻碍', desc: '出现一个具体的麻烦或阻力' },
+  { face: 2, label: '旧识', desc: '一个过去认识的人或事重新出现' },
+  { face: 3, label: '消息', desc: '传来一个改变判断的消息' },
+  { face: 4, label: '不速之客', desc: '有人或势力突然介入' },
+  { face: 5, label: '意外之得', desc: '得到一样东西、一条线索或一个机会' },
+  { face: 6, label: '变天', desc: '环境或局势发生明显变化' },
+];
+
+/* ============================================================================
+   状态
+   ============================================================================ */
+let CFG = { apiUrl: '', apiKey: '', model: '', temp: 0.9, stream: true, think: 'off', extra: '', len: 800, pick: 'local', codexCap: 6000 };
+let BOOK = null;
+let genState = { running: false, stop: false, text: '', el: null };
+let saveTimer = 0;
+
+/* ============================================================================
+   预设开局（从游戏版 Talehall 的 10 套设定搬过来，去掉 RPG 部分）
+   ============================================================================ */
+const PRESETS = [{"name":"🏔 艾厄洛姆德大陆","title":"艾厄洛姆德大陆","tagline":"一棵维系着世界的巨树，没有人见过它；一片没有人走完过的大陆，而你正站在上面。","era":"架空时代，各国技术水平落差极大——落差本身就是武器。\n· 阿尔比昂帝国＝维多利亚水平：蒸汽机、铁路、后装火枪、精密工业。严格管控技术外流，出口的永远是落后一两代的型号，核心工艺绝不外传。\n· 塔拉辛联合国＝中世纪加一点蒸汽科技：有蒸汽水泵与简单机械，无铁路无工厂。魔法道具比机械普及。\n· 自由港同盟＝落后一些的大航海时代：帆船为主，火器粗糙，但造船与航海技术冠绝大陆。\n· 卡兹穆丹＝工坊手工业的巅峰：没有蒸汽机，也不追求机械，但锻造精度近乎工业级。矮人认为「机器不懂器物的心思」。\n· 艾尔维兰＝几乎没有工业：日常靠魔法与自然产物，视机械化为对器物的不敬。\n· 加罗什汉＝原始：以骨、皮、石与粗铁为主，火器极少，靠体魄与本能。\n大陆上两条通往力量的路——机械与魔法——恰好各握在一个国家手里。","geo":"已知世界位于世界树树干内部，是一片被多层冰墙围拢的广衷陆地。\n半径约 22,000 公里，直径约 44,000 公里，面积约 15 亿平方公里（接近地球表面积的三倍）。以车马与帆船横穿一次，需以月计——火车只跑阿尔比昂境内，指望不上它出远门。\n世界树维系整个世界，但**不可观测**——走到世界正中心，看到的只是一片寻常荒野。大陆居民知道存在这样一棵巨树，但无人知晓其全貌。\n昼夜由树冠缓慢明灭决定；光芒色调一日内经历九种变化。\n五大板块，远古时曾是相连的一整片，被**古龙战争**撕裂：中央板块＝塔拉辛；西＝阿尔比昂；北＝加罗什汉；南＝卡兹穆丹；东＝艾尔维兰。自由港同盟不占连续领土，由散布于各板块海岸的七座港口城邦组成。\n温度带同心分布：越靠中央越暖，越靠冰墙越冷。四季全境同步。\n冰墙天然形成，高约一万千米、径向厚约二万千米，且不止一道，层层同心向外。墙外仍需探索，归来者寥寥。","races":"五大种族，人口大致均衡，没有任何一族占多数。\n· 人类——分布最广，适应力最强，信仰唯一神「艾欧」，建有教会。\n· 精灵——长寿，亲近自然，信仰世界树（源于古老传说，他们自己也不掌握真相），独有血脉天赋「自然系」。\n· 矮人——身材矮壮，锻造天赋冠绝大陆，相信用心锻造的器物会得到赐福。\n· 兽人——体魄强健、轮廓粗犷，形态偏向「兽」；无信仰，靠本能与直觉行动。\n· 亚人——**不是一个种族，而是一个笼统归类**：人类体态＋少量动物特征（兽耳、尾、翼、鳞）。各族差异极大，无统一文化。信奉海神。\n各族之间可通婚，后代是独立的**混血**，会被隐晦地歧视（谈生意时价格总高一档、租房时房东恰好租出去了、竞技场上下手稍微重一点——没人承认这是歧视，混血自己也说不清楚）。\n在各自国家之外，兽人与亚人地位明显偏低，但两者却互相看不顺眼。","threat":"危险度直接绑定**委托等级 F～S**（协会按队伍登记，F 级 1–2 人，S 级需复数队伍协同）。\n· 寻常野兽（狼、熊、山猫、巨鹰）——F\n· 魔物（史莱姆、哥布林、半兽人、巨魔、食人魔、狮鹫）——F～C。它们是**自然存在的物种**，学界已分类入图鉴，危险但可研究、可防备\n· 不死生物（亡灵、骷髅兵、尸鬼、幽魂）——C～B。来源三条：**自然生成、诅咒所致、死灵术产物**。外观上几乎无法分辨，这条模糊性本身就是麻烦的来源\n· 龙类——飞龙（双足双翼，寿命近乎永恒、繁衍极难，极稀少，多栖尖刺山）**A～S**，不要写成路边野怪；飞龙龙王（尖刺山最深处，拖着残躯数千年不死不活）**超出评级，不可战胜**\n· 瘴荒生物（毒气雨林特有种群，多带毒）——A～S，仅存在于冰墙之外\n· **深渊生物**——**无法评级**。来自第二道冰墙之外的更远处，距离不明。学界连它们是否算「生物」都无法确定。它们偶尔出现在墙内，每次出现都伴随无法解释的现象。**任何研究都以失败告终——不是找不到，而是认知本身无法成立**：记录彼此矛盾，目击者的描述无法对齐，仪器数据互相冲突。学界因此形成默契：不研究，只回避。已确认的目击类型只有**深渊骑士**——极其高大的漆黑重甲骑士，有的持双手巨剑，有的持大盾与长枪，有的持中型盾与长剑，行动缓慢而沉默，没有人听过它们发出声音","power":"**本源**：宇宙群星。世界树汲取星光，转化为可被生命利用的能量——「树息」。\n**形态**：树息是**均匀弥漫于整个世界的场**，而非从树心向外扩散的流体。因此**施法威力与所处位置无关**——在中心与在边境毫无差别。天赋也是全大陆均匀随机分布的。\n**三条通路**：1. 魔法——天赋者主动导引树息，稳定、可复现、需系统学习；2. 祷告——通过艾欧被动接收同一股能量，受限，以治疗辅助为主，信仰越虔诚导引越精准；3. 星辰魔法——绕过世界树直接引未转化的原始星光，威力大但极不稳定，极罕见，多数传承已失传或被视为禁忌。\n**为何道具普及而法师罕见**：魔法道具是标准化导引器，凡人皆可使用；「自行导引」才需要天赋。","powerRank":"**魔法师 · 十二级制**（每级需通过升级考试，由卡瑞兰学府统一主考）\n初阶·修习：蒙学 → 学徒 → 见习 → 术士\n中阶·执业：法师 → 执笔 → 持印 → 学士\n高阶·学府：授业 → 大法师 → 贤者 → 冠冕\n存世人数：学徒以千计，见习千余，术士数百，法师百余，执笔数十，持印十余，学士十人上下，授业不足十人，大法师三至五人，贤者不超过两位，冠冕现存无人。\n**魔法分类**：生活系（种类极少，由自身上限低、转为冒险者的法师为野外生存而研究）；战斗系分元素系（水、火、冰、雷、风）、自然系（**精灵独有**，严格说不是魔法，更接近血脉天赋，偏祷告性质）、死灵系（传承极少，被普遍视为亵渎尸体）、无类型（含附魔）。\n**祷告者**：双维度——信仰深度（浅信→虔信→笃信→献身）与教会等级（信众→修士→司铎→主教→大主教），前者决定上限，后者决定可调用的授权额度。\n**冒险者协会**：九级——锡 → 铅 → 钨 → 金 → 钴 → 秘银 → 精金 → 叶绿 → 夜明。注册门槛极低，升级难度极高。\n**委托等级**：F / E / D / C / B / A / S。组队是常态但不是铁律，极少数强者能独行高难委托。\n**钨 → 金 是一道坎**：必须**同时**拥有六国首都协会的证明与相应功绩，才能继续升级。许多人实力早已足够，却卡在这里一辈子。\n**银牌（特殊变种）**：有足够功绩、却拿不到全部证明的人衍生出的等级。存世极少，但每一个都是一等一的高手，**真实实力通常高出名义等级两三级**。","powerCost":"1. **学习成本本身就是最大的代价**——魔法体系极其复杂，一个高阶法术可能有人穷尽一生也无法理解。天赋决定一个人最终能学到哪一层。\n2. **精神力与专注力消耗**——连续施法会持续消耗，耗尽后无法继续。\n3. **强行施放超出自身能力的法术**——导致短暂晕厥，严重者数日无法施法。\n魔法的门槛在「学得会学不会」，而不在资源。因此强大的法师不是资源多的人，而是**学得多的人**——知识即权力，掌握藏书、教席与考试权的人就掌握权力。","powerLaw":"1. 树息总量恒定，不能被创造，也不能被毁灭，只能被导引与转换。\n2. 死者不可复活。死灵系不役使灵魂，只能与尚未安息的灵魂沟通——只能对话，不能驱使，也不能带回。\n3. 时间不可逆流。\n4. **深渊生物不可被理解**——任何试图研究、解释或揭底的写法都是错的，它的核心设定就是神秘性本身。","politics":"各国互派使节，但没有凌驾于各国之上的共同权威。\n· 阿尔比昂帝国——君主立宪。女王端坐女王尖塔，实权在蒸汽议会厅。\n· 塔拉辛联合国——代表制联邦议会，于万民穹顶议事。对外奉行不干涉主义。\n· 卡兹穆丹——世袭王权，但君王須得「石语者」认可方可登位。\n· 艾尔维兰——长老议会，由年长者与「记忆持有者」共治。\n· 加罗什汉——部落联盟，首领由血环竞技场的胜负与先祖之颅山的认可共同决定，没有成文法。\n· 自由港同盟——七港代表议会，**港规高于国法**：只要货还在船上，任何国家的通缉令都不生效。","economy":"**货币**：铜币 → 银币 → 金币 → 白金币，每级 **100:1**，**全大陆完全通用，无兑换、无汇率**。\n**币值锚点**：以「**一个普通人一整星期的生活费 = 1 银币 = 100 铜币**」为基准。\n　1 铜币＝一块粗面包、一杯淡酒、一晚最下等的通铺；十几个铜币＝普通人一天糊口。\n　1 银币＝普通人**整整一星期**的生活费，也约等于一把普通武器。\n　1 金币＝一匹好马，也约等于一个普通人**两年**的生活费。\n　1 白金币＝几乎不在市面流通，只用于国家间结算与顶级贵族之间（约合普通人两百年）。\n**阶层收入对照**（贫富差距很大）：流民与苦力一天 3～5 铜币，攒不出一个银币；普通平民（有地或有手艺）一天十几个铜币，一周约 1 银币；熟练工匠与低级雇员一月数银币；小商人与军官一月 1～几金币；领主与大商贾以金币计日，家产以白金币计。\n**经济支柱**：阿尔比昂＝工业制成品；卡兹穆丹＝矿产与锻造（握有定价权）；自由港＝海运、转口贸易、保险与借贷；艾尔维兰＝稀有药材、木材与少量高价工艺品；塔拉辛＝粮食、魔法道具，以及**魔法师升级考试的认证费**（一笔隐蔽而丰厚的收入）；加罗什汉＝皮革、牲畜与雇佣兵输出。\n经济体系简单：无纸币、无复杂金融工具。跨国纠纷一般交由自由港的仲裁所处理。\n**度量衡从简**：长度用「里」，重量用「斤」，各国通用无换算。","religion":"· 精灵——信仰世界树，认为精灵诞生于世界树。但这份信仰源于古老传说，他们自己并未掌握多少真相。\n· 矮人——信仰熔炉之神，相信用心锻造的器物会得到赐福。同时存在邪教，认为以血淬火能给器物附灵。\n· 兽人——无信仰，依靠本能与直觉行动。\n· 亚人——信奉海神，每次出海前都会祈祷。\n· 人类——信仰唯一神「艾欧」，组建了教会。信仰达到一定程度后祷告可具有如魔法般的力量，以治疗与辅助为主。人类聚居处皆有艾欧教堂。信仰越虔诚，祷告威力越强。\n· 魔法师——不信神，相信群星才是指引前路的存在。\n**关于艾欧**：真实存在，偶尔降临展现神迹。但有确切记载的神迹**不超过五次**，且每一次都存在争议——魔法师阵营普遍认为那不过是尚未被理解的星辰魔法。","laws":"**通用**：货币与度量衡全境通用；**冒险者协会的注册凭证各国互认**，是全大陆唯一被六国共同承认的身份证件；见面礼数須按对方国籍调整（对阿尔比昂人行鞠躬礼，对矮人行碰拳礼，对精灵行顲首礼，对兽人则不宜主动伸手）；在城镇内施放战斗系魔法須报备，但各国执行力度差异极大。\n· 阿尔比昂——头衔必须完整称呼，省略即为侮辱。工业区夜间有「熄火令」，但黑烟区从来无人执行。\n· 塔拉辛——魔法师等级证书由卡瑞兰学府签发，升级考试收费，是大陆含金量最高的资质。\n· 卡兹穆丹——锻造师之间以「锤礼」相认。卖出一件亲手锻造的器物后須留下刻记，**终身负责**。\n· 艾尔维兰——外人未经许可靠近银歌森林即视为冒犯。精灵极少与外人通婚，也极少离开东板块。\n· 加罗什汉——没有成文法，一切由首领与先祖认可裁决。外人想加入部落，必須先在血环竞技场证明自己。\n· 自由港——港规高于国法。只要货还在船上，任何国家的通缉令都不生效。","customs":"· **历法**：一日 30 小时、九个时段（午夜、凌晨、早晨、上午、中午、下午、傍晚、黄昏、黑夜），由世界树光芒的色调划分，白昼与黑夜各占 15 小时。一年 360 天、二个个月，采用「冠光历」，以「星回」纪年，以「恒冠」星座回归天顶为标志。\n· **纪元**：以古龙战争为界，此前称「龙劫前」，此后称「龙劫后」。当今为龙劫后数千年。\n· **度量衡**：从简，长度用「里」，重量用「斤」。\n· **称呼**：对陌生人通称「阁下」，熟人直呼其名。魔法师的等级称号是大陆上唯一被各国共同承认的个人头衔。\n· **语言**：通行一种大陆通用语，各族保留母语。精灵与兽人聚居区内通用语未必管用。\n· **出行**：**火车是阿尔比昂独有的东西**——铁路基本只铺在帝国境内，只有两三条干线伸出国境（一条通自由港的港城，一条到塔拉辛的边境换乘站），且由帝国自营、随时可以掉断。**票价极贵**，普通人的数月开销，非商贾、使节或帝国认可者往往买不到票。长途仍以驿站马车、商队与帆船为主，横穿大陆以月计。","timeline":"**龙劫后历 0 年 · 古龙战争**\n生有四足四翼的古龙与大陆所有种族爆发旷世大战。战争分三阶段：古龙压境 → 飞龙首领背刺古龙龙王、转而协助大陆 → 古龙败退后飞龙立即反咬大陆。最终**两败俱伤，没有赢家**：古龙被逐出冰墙之外，飞龙龙王被古龙龙王打成濒死，大陆各族元气大伤。\n**直接后果**：板块分裂（原本相连的大陆被撕裂）；塔拉辛联合国诞生（战后各族联合的产物）。\n**其余历史留白**，待游玩中逐步补充。","conflict":"【沙盒模式】以下只是世界常态矛盾，**不要强行推进任何一条，不要编成「主线」**，谁被引爆取决于玩家做了什么。\n1. 阿尔比昂 ⇄ 塔拉辛——魔法教育认证权被卡瑞兰学府夺走，阿尔比昂一直想拿回来。而塔拉辛与世无争，所以这是**单方面的忌惮**。\n2. 艾欧教会 ⇄ 魔法师——教会认为力量必須由神授予，法师认为可以自行导引。教会有真实的神迹（但史上只有五次），而法师说那不过是未被理解的星辰魔法。神学与科学的对撞。\n3. 兽人 ⇄ 亚人——两国同是被歧视的弱国，本该同气连枝，却互相看不顺眼。这段旧怨有具体来由，但双方都不愿提起。\n4. 自由港 ⇄ 内陆诸国——「港规高于国法」让内陆国家憎恨，却又离不开它的船。\n5. 矮人的定价权——锻造技术垄断让卡兹穆丹握有话语权，当年用技术换矿产的条约仍是旧伤。\n6. 冰墙之外——古龙败退到冰墙之外已数千年。它们还在吗？还会回来吗？而每年都有人想越过那道墙。","mystery":"【逐步揭示，一次最多推进一条。以下都是悬而未决的**问题**，不是答案。】\n1. **树干为何不可见**——传说古早年代站在世界正中心能望见树干，如今只剩及膝野草。是树消失了，还是有什么改变了「观测」这件事本身？\n2. **自然系被误分类**——学府把它编进战斗系，精灵知道那不是魔法，是血脉。是没弄明白，还是装作没弄明白？\n3. **灵魂的归处**——「安息」究竟是什么状态？艾欧教会对此始终沉默。\n4. **亚尔伯特失踪**——卡瑞兰学府创始人、十二级冠冕法师，数年前消失，学府拒绝公开原因。他是主动离开的，还是被带走的？\n5. **冒险者协会的「不可考」**——一支会自动变换材质、无法丢弃、且与一个位置不明的地点实时相连的身份牌。能造出这种东西的组织，为何总部与创始人都不可考？\n6. **亚人的起源**——流传甚广却从未证实的猜测：亚人根本就是人类与动物的混血。教会斥为异端，学者争论不休。\n7. **世界是否只是一个圈**——冰墙天然存在，却是层层同心。「如果世界是一个圈，画圈的是谁？」\n8. **古龙在墙外的数千年**——它们被逐出去之后经历了什么？（**保持开放，不写死**）","factions":[{"name":"阿尔比昂帝国","stance":"维多利亚式工业帝国，君主立宪","goal":"维持科技与工业优势；夺回被卡瑞兰学府拿走的魔法认证权","relation":"看重出身的门第观念；对塔拉辛出身者天然戒备"},{"name":"塔拉辛联合国","stance":"代表制联邦，不干涉主义","goal":"维持贸易与认证秩序，不称霸不扩张","relation":"最包容，但官僚手续繁多"},{"name":"卡兹穆丹","stance":"矮人世袭王权，石语者可否决王位","goal":"保住锻造技术的定价权","relation":"只看技艺不看血脉；对不会手艺的人冷淡"},{"name":"艾尔维兰","stance":"精灵长老议会，闭关","goal":"守护传统，不与外界往来","relation":"疏离。除非你与自然有关，否则很难被理会"},{"name":"加罗什汉","stance":"兽人部落联盟，无成文法","goal":"在北境活下去","relation":"敌视外来者，但极度尊重强者"},{"name":"自由港同盟","stance":"七港代表议会，港规高于国法","goal":"维持海运自由与商业利润","relation":"只要付得起钱，一切都好谈。表面是七座港口城邦的联盟，实则是大陆上唯一的中间商"},{"name":"艾欧教会","stance":"跨国宗教组织，在人类区权势极大","goal":"扩张信仰；压制对神迹的质疑","relation":"对信徒亲切；对魔法师心存敌意"},{"name":"卡瑞兰学府","stance":"名义上隶属塔拉辛，实则独立","goal":"统一全大陆的魔法教育与认证体系","relation":"认天赋不认出身；但只认自己的考卷"},{"name":"冒险者协会","stance":"跨国中立组织，总部与创始人皆不可考","goal":"不可考","relation":"分部遍布全大陆几乎所有聚居地，小到村镇大到城邦。注册门槛极低，升级难度极高。注册后获发一枚**身份金属牌**（锡→铅→钨→金→钴→秘银→精金→叶绿→夜明，材质随等级自动变化），无法自行丢弃，直接连接着协会的「档案馆」，并可一定程度存储信息"}],"places":[{"name":"女王尖塔","desc":"阿尔比昂王权象征，立于都城中轴。塔身嵌满齿轮与蒸汽管道，每逢整点喷出白气并鸣钟。"},{"name":"蒸汽议会厅","desc":"阿尔比昂实权中心。圆形议事厅中央悬着一台巨型差速机，议员投票时转动铜制转盘，结果当众演算并铭刻在铜带上。"},{"name":"皇家魔法学院","desc":"阿尔比昂历史最悠久的魔法学府，曾垄断全大陆魔法师认证。卡瑞兰学府崛起后元气大伤，如今聚集着一批坚持「阿尔比昂正统」的老派法师。"},{"name":"黑烟区","desc":"都城西北的工业贫民窟，终年不见天日——不是没有光，而是煤烟把天盖住了。逃犯、走私者与走投无路的冒险者都在此落脚，也是全大陆情报最便宜的地方。"},{"name":"万叶藏书阁","desc":"精灵的至高藏书地。整座建筑是一株活着的巨树，书册长在叶脉里，摘下叶片展开即是书页。不对非精灵开放。"},{"name":"记忆之池","desc":"精灵用来保存与查阅记忆之处。池水能映出被投入其中的记忆，但看一次就要重新经历一次。长老议会的重要决议皆以此存档。"},{"name":"银歌森林","desc":"精灵的圣地。夜里树木会随树冠光色变化发出低沉嗡鸣，精灵称之为「银歌」。外人未经许可靠近即视为冒犯。"},{"name":"深火熔炉","desc":"卡兹穆丹的心脏，建在火山口上的巨型锻造炉，自矮人建国起从未熄灭。此处锻出的器物都带「炉印」，是全大陆公认的最高品质保证。"},{"name":"石语者王座","desc":"卡兹孟丹的权力奇观。王座不授予君王，而授予一群据称能听懂石头说话的人。没有石语者的认可就无法登位。"},{"name":"回声深渊","desc":"卡兹穆丹最深的矿坑，深到没有矮人知道底部有什么。往里面喊一声，回声回来的时间不对——有时太快，有时太慢，有时回来的不是自己的声音。"},{"name":"血环竞技场","desc":"用巨兽肋骨围成的环形竞技场，部落联盟的首领由此产生。参赛者必須在不杀死对手的前提下让对方认输。"},{"name":"先祖之颅山","desc":"由无数巨兽头骨堆叠而成的圣山。兽人没有神，但他们相信先祖的目光仍在。每个部落的成年礼都要在此独自待上一夜。"},{"name":"巨锚市场","desc":"自由港最大的交易场，围绕一只不知从何处打捞上来的巨锚建成。全大陆的货物都在这里过手，包括很多不应存在于世的东西。规矩：不问来历，不问去向，不赊账。"},{"name":"风暴灯塔","desc":"自由港最东端的灯塔，如今更多是给走私船传信号。守塔人由七港轮值，任期一年——但上一任守塔人已经失踪三个月，七港谁都不愿接手。"},{"name":"卡瑞兰学府","desc":"全大陆魔法师的认证中心，由传奇法师亚尔伯特·冯·克莱因创立。学府只认考卷不认出身，因此被阿尔比昂视为眼中钉。创始人已于数年前失踪，学府至今没有公开原因。"},{"name":"万民穹顶","desc":"塔拉辛的议政之所，一座没有墙壁的巨型穹顶。任何代表都可自由发言，但只有议长能决定何时休会。穹顶外常年有各族商贩聚集，被称作「穹顶下的市场」。"},{"name":"帝国大图书馆","desc":"塔拉辛的知识心脏，收藏着从各国收来的书籍、图纸与手稿，包括不少被原属国禁止外传的技术。对所有人开放，但抄录需缴押金——押金高得让大多数研究者望而却步。"},{"name":"千塔大道","desc":"塔拉辛最著名的街道，两侧耸立数百座法师塔。塔的高度与主人的魔法等级成正比，因此天际线每隔几年就会变一次。塔与塔靠绳索与浮桥相连。"},{"name":"尖刺山","desc":"矗立在西北荒野，一片不属于任何国家的无人地带。山体由无数尖锐岩柱构成。山中栖息着极罕见的飞龙，最深处则沉眠着那位拖着残躯的飞龙龙王。各国冒险者都来过，都留下了一些东西——但没有一样是活着的。"},{"name":"世界中心","desc":"中央板块正中的一片寻常荒野。传说古早年代站在这里可以望见世界树的树干；如今只有及膝的野草、零星碎石和一间无人的驿站。偶尔有朝圣者来这里站上一整天，然后什么也没发生地离开。"}],"npcs":[{"name":"亚尔伯特·冯·克莱因","role":"卡瑞兰学府创始人 · 魔法师十二级「冠冕」（史上极少数获此衔者之一）","motive":"数年前失踪，学府从未公开原因。他是主动离开、被带走，还是找到了什么？此事与「树干为何不可见」可能存在联系，但不要急于揭底。","relation":"尚未与主角相遇。他是全大陆魔法师共同的话题，莉薇娅在千塔大道上不可能没听过这个名字。"},{"name":"格里昂","role":"冒险者协会「银牌」冒险者 · 古龙血脉的继承者","motive":"远古炼金术士研究古龙血脉的产物，以人类之躯完美继承了古龙血脉。最初以一颗蛋的形态在隐秘山洞中休眠多年，直到二十三年前才破壳而出，出生即是成人模样。身材高大、肌肉分明却不显壮，眼睛是竖瞳。古龙血脉目前只带给他强悍的身体与恢复力。他靠洞中遗留的手记与书本拼出了自己的来历和部分历史，后来成为冒险者，只为有朝一日越过冰墙去寻找古龙——他想弄清自己究竟是什么。","relation":"尚未与主角相遇。他是莉薇娅走出家门之后，最可能成为同伴、也最危险的那一类人。"}],"style":"欧陆奇幻（翻译腔）","scale":"成人向剧情","person":"第三人称限定","focus":"均衡","charName":"莉薇娅","role2":"塔拉辛联合国 · 没落老牌贵族家的三小姐","look":"金发碧眼，身形娇小软糯，看上去像十二三岁，精致得像人偶——实际刚过完十六岁成年礼。","persona":"生性活泼好动，向往自由。但从小被束缚在连现在的贵族都不怎么遵守的繁复礼仪里，被规训得像一具麻木的提线木偶：人前是完美的贵族小姐，人后常常一个人发呆。","back":"塔拉辛一支没落的老牌贵族。家道中落，却仍死守着早已无人遵守的古礼。你是家中第三个女儿——两个姐姐都已出嫁，而你被留到最后，当作家族翻身的筹码。","goal":"想逃。想看看礼裙与折扇之外的地方长什么样。","secret":"她已经开始偷偷攒钱，也偷偷记住了家里账房出入的时辰。","opening":"成年礼刚结束，宾客散尽，长裙和饰带还堆在房里。窗外是千塔大道的灯火。明天，你要去见一位家族安排好的「客人」。","equip":"外出礼裙（昂贵但不便行动）、家徽胸针（银质，边缘已磨损）、绣花手帕","skills":"宫廷礼仪 9 · 竖琴 5 · 藏起情绪 8 · 战斗 0 · 魔法 0","items":"偷偷攒下的银币 ×7、一封尚未拆开的婚约信、一本被翻旧的诗集","clues":"家族与某个来头不小的势力正在议婚，对方的情报被父亲刻意瞒着；家族的败落似乎不只是因为挥霍。","rules":"· 这是**沙盒世界**。不要强行推进主线，不要给玩家指派任务，不要把任何一条张力编成「主线」。\n· 玩家的行动决定故事走向；**世界按自身逻辑运转**——即使玩家什么都不做，世界也会继续动。\n· 「关键人物」以外的次要 NPC 由你按世界设定自行创造，出场后保持前后一致；已出场 NPC 的性格与动机一旦确定，不得随意改动。\n· 势力之间是**长期矛盾**而非当前战事。除非玩家主动介入，不要主动爆发大规模战争。\n· **主角的实力定位由玩家自己决定**：他可以是万里挑一、能单刷高难委托的强者，也可以是必须依靠队伍才能活下来的普通人。请根据玩家的行为与偏好逐步调整，**不要预设他属于哪一种**，也不要在他还没表现出实力时就把世界当成爽文来写。\n· 组队时，队友是**独立的人**，有自己的动机、底线和恐惧。\n· **混血**没有法律禁令，也不会被公开羞辱，歧视是**隐晦的**：谈生意时价格总比别人高一档，租房时房东恰好租出去了，竞技场上下手稍微重一点。没有人会承认这是歧视。\n· 兽人与亚人在**各自国家之外**地位偏低：被轻视、被恶意压价、被许多场所拒之门外。\n· 魔法是**唯物的、可研究的**；但世界本身是奇幻的——史莱姆和哥布林是自然物种，不神秘，只是危险。","bans":"· 不要替玩家做决定、不要说玩家的台词。\n· 不要让玩家获得超出其身份与能力的情报。\n· **不要让飞龙变成路边野怪**——它是极罕见的、有历史重量的存在。\n· **不要试图解释深渊生物**——它们的神秘性必须保住，任何「原来是这样」的揭底都是错的。\n· 不要把飞龙龙王写成可以被打败的 Boss。\n· 不要让 NPC 无条件信任或服从主角。","canon":"· 魔法与祷告**同源**，皆来自世界树转化后的「树息」。\n· 树息是**均匀弥漫的场**，施法威力与所处位置无关；天赋全大陆均匀分布。\n· 魔法道具是标准化导引器，凡人可用；「自行导引」才需要天赋。\n· 死者不可复活；死灵系不役使灵魂，只能与尚未安息的灵魂沟通。\n· **树干不可观测**。大陆居民不知道世界树的全貌，更不知道自己身处树干内部。\n· 冰墙**天然存在**，且不止一道，层层同心向外。\n· 纪元名「**龙劫**」；当今为龙劫后数千年（不写确切数字）。\n· **飞龙龙王没有死**，仍在尖刺山。\n· 古龙战争：飞龙首领背刺古龙龙王、协助大陆，战后反咬大陆，最终两败俱伤。\n· **冒险者协会的升级门槛**：钨牌升金需同时拥有**每个国家首都的协会证明**与相应功绩。银牌是「有足够功绩但没有证明」而衍生的特殊变种，存世极少——**每一个都是一等一的高手，真实实力高出两到三个等级**。"},{"name":"⚔ 艾厄洛姆德 · 冒险者开局","title":"艾厄洛姆德大陆","tagline":"一棵维系着世界的巨树，没有人见过它；一片没有人走完过的大陆，而你正站在上面。","era":"架空时代，各国技术水平落差极大——落差本身就是武器。\n· 阿尔比昂帝国＝维多利亚水平：蒸汽机、铁路、后装火枪、精密工业。严格管控技术外流，出口的永远是落后一两代的型号，核心工艺绝不外传。\n· 塔拉辛联合国＝中世纪加一点蒸汽科技：有蒸汽水泵与简单机械，无铁路无工厂。魔法道具比机械普及。\n· 自由港同盟＝落后一些的大航海时代：帆船为主，火器粗糙，但造船与航海技术冠绝大陆。\n· 卡兹穆丹＝工坊手工业的巅峰：没有蒸汽机，也不追求机械，但锻造精度近乎工业级。矮人认为「机器不懂器物的心思」。\n· 艾尔维兰＝几乎没有工业：日常靠魔法与自然产物，视机械化为对器物的不敬。\n· 加罗什汉＝原始：以骨、皮、石与粗铁为主，火器极少，靠体魄与本能。\n大陆上两条通往力量的路——机械与魔法——恰好各握在一个国家手里。","geo":"已知世界位于世界树树干内部，是一片被多层冰墙围拢的广衷陆地。\n半径约 22,000 公里，直径约 44,000 公里，面积约 15 亿平方公里（接近地球表面积的三倍）。以车马与帆船横穿一次，需以月计——火车只跑阿尔比昂境内，指望不上它出远门。\n世界树维系整个世界，但**不可观测**——走到世界正中心，看到的只是一片寻常荒野。大陆居民知道存在这样一棵巨树，但无人知晓其全貌。\n昼夜由树冠缓慢明灭决定；光芒色调一日内经历九种变化。\n五大板块，远古时曾是相连的一整片，被**古龙战争**撕裂：中央板块＝塔拉辛；西＝阿尔比昂；北＝加罗什汉；南＝卡兹穆丹；东＝艾尔维兰。自由港同盟不占连续领土，由散布于各板块海岸的七座港口城邦组成。\n温度带同心分布：越靠中央越暖，越靠冰墙越冷。四季全境同步。\n冰墙天然形成，高约一万千米、径向厚约二万千米，且不止一道，层层同心向外。墙外仍需探索，归来者寥寥。","races":"五大种族，人口大致均衡，没有任何一族占多数。\n· 人类——分布最广，适应力最强，信仰唯一神「艾欧」，建有教会。\n· 精灵——长寿，亲近自然，信仰世界树（源于古老传说，他们自己也不掌握真相），独有血脉天赋「自然系」。\n· 矮人——身材矮壮，锻造天赋冠绝大陆，相信用心锻造的器物会得到赐福。\n· 兽人——体魄强健、轮廓粗犷，形态偏向「兽」；无信仰，靠本能与直觉行动。\n· 亚人——**不是一个种族，而是一个笼统归类**：人类体态＋少量动物特征（兽耳、尾、翼、鳞）。各族差异极大，无统一文化。信奉海神。\n各族之间可通婚，后代是独立的**混血**，会被隐晦地歧视（谈生意时价格总高一档、租房时房东恰好租出去了、竞技场上下手稍微重一点——没人承认这是歧视，混血自己也说不清楚）。\n在各自国家之外，兽人与亚人地位明显偏低，但两者却互相看不顺眼。","threat":"危险度直接绑定**委托等级 F～S**（协会按队伍登记，F 级 1–2 人，S 级需复数队伍协同）。\n· 寻常野兽（狼、熊、山猫、巨鹰）——F\n· 魔物（史莱姆、哥布林、半兽人、巨魔、食人魔、狮鹫）——F～C。它们是**自然存在的物种**，学界已分类入图鉴，危险但可研究、可防备\n· 不死生物（亡灵、骷髅兵、尸鬼、幽魂）——C～B。来源三条：**自然生成、诅咒所致、死灵术产物**。外观上几乎无法分辨，这条模糊性本身就是麻烦的来源\n· 龙类——飞龙（双足双翼，寿命近乎永恒、繁衍极难，极稀少，多栖尖刺山）**A～S**，不要写成路边野怪；飞龙龙王（尖刺山最深处，拖着残躯数千年不死不活）**超出评级，不可战胜**\n· 瘴荒生物（毒气雨林特有种群，多带毒）——A～S，仅存在于冰墙之外\n· **深渊生物**——**无法评级**。来自第二道冰墙之外的更远处，距离不明。学界连它们是否算「生物」都无法确定。它们偶尔出现在墙内，每次出现都伴随无法解释的现象。**任何研究都以失败告终——不是找不到，而是认知本身无法成立**：记录彼此矛盾，目击者的描述无法对齐，仪器数据互相冲突。学界因此形成默契：不研究，只回避。已确认的目击类型只有**深渊骑士**——极其高大的漆黑重甲骑士，有的持双手巨剑，有的持大盾与长枪，有的持中型盾与长剑，行动缓慢而沉默，没有人听过它们发出声音","power":"**本源**：宇宙群星。世界树汲取星光，转化为可被生命利用的能量——「树息」。\n**形态**：树息是**均匀弥漫于整个世界的场**，而非从树心向外扩散的流体。因此**施法威力与所处位置无关**——在中心与在边境毫无差别。天赋也是全大陆均匀随机分布的。\n**三条通路**：1. 魔法——天赋者主动导引树息，稳定、可复现、需系统学习；2. 祷告——通过艾欧被动接收同一股能量，受限，以治疗辅助为主，信仰越虔诚导引越精准；3. 星辰魔法——绕过世界树直接引未转化的原始星光，威力大但极不稳定，极罕见，多数传承已失传或被视为禁忌。\n**为何道具普及而法师罕见**：魔法道具是标准化导引器，凡人皆可使用；「自行导引」才需要天赋。","powerRank":"**魔法师 · 十二级制**（每级需通过升级考试，由卡瑞兰学府统一主考）\n初阶·修习：蒙学 → 学徒 → 见习 → 术士\n中阶·执业：法师 → 执笔 → 持印 → 学士\n高阶·学府：授业 → 大法师 → 贤者 → 冠冕\n存世人数：学徒以千计，见习千余，术士数百，法师百余，执笔数十，持印十余，学士十人上下，授业不足十人，大法师三至五人，贤者不超过两位，冠冕现存无人。\n**魔法分类**：生活系（种类极少，由自身上限低、转为冒险者的法师为野外生存而研究）；战斗系分元素系（水、火、冰、雷、风）、自然系（**精灵独有**，严格说不是魔法，更接近血脉天赋，偏祷告性质）、死灵系（传承极少，被普遍视为亵渎尸体）、无类型（含附魔）。\n**祷告者**：双维度——信仰深度（浅信→虔信→笃信→献身）与教会等级（信众→修士→司铎→主教→大主教），前者决定上限，后者决定可调用的授权额度。\n**冒险者协会**：九级——锡 → 铅 → 钨 → 金 → 钴 → 秘银 → 精金 → 叶绿 → 夜明。注册门槛极低，升级难度极高。\n**委托等级**：F / E / D / C / B / A / S。组队是常态但不是铁律，极少数强者能独行高难委托。\n**钨 → 金 是一道坎**：必须**同时**拥有六国首都协会的证明与相应功绩，才能继续升级。许多人实力早已足够，却卡在这里一辈子。\n**银牌（特殊变种）**：有足够功绩、却拿不到全部证明的人衍生出的等级。存世极少，但每一个都是一等一的高手，**真实实力通常高出名义等级两三级**。","powerCost":"1. **学习成本本身就是最大的代价**——魔法体系极其复杂，一个高阶法术可能有人穷尽一生也无法理解。天赋决定一个人最终能学到哪一层。\n2. **精神力与专注力消耗**——连续施法会持续消耗，耗尽后无法继续。\n3. **强行施放超出自身能力的法术**——导致短暂晕厥，严重者数日无法施法。\n魔法的门槛在「学得会学不会」，而不在资源。因此强大的法师不是资源多的人，而是**学得多的人**——知识即权力，掌握藏书、教席与考试权的人就掌握权力。","powerLaw":"1. 树息总量恒定，不能被创造，也不能被毁灭，只能被导引与转换。\n2. 死者不可复活。死灵系不役使灵魂，只能与尚未安息的灵魂沟通——只能对话，不能驱使，也不能带回。\n3. 时间不可逆流。\n4. **深渊生物不可被理解**——任何试图研究、解释或揭底的写法都是错的，它的核心设定就是神秘性本身。","politics":"各国互派使节，但没有凌驾于各国之上的共同权威。\n· 阿尔比昂帝国——君主立宪。女王端坐女王尖塔，实权在蒸汽议会厅。\n· 塔拉辛联合国——代表制联邦议会，于万民穹顶议事。对外奉行不干涉主义。\n· 卡兹穆丹——世袭王权，但君王須得「石语者」认可方可登位。\n· 艾尔维兰——长老议会，由年长者与「记忆持有者」共治。\n· 加罗什汉——部落联盟，首领由血环竞技场的胜负与先祖之颅山的认可共同决定，没有成文法。\n· 自由港同盟——七港代表议会，**港规高于国法**：只要货还在船上，任何国家的通缉令都不生效。","economy":"**货币**：铜币 → 银币 → 金币 → 白金币，每级 **100:1**，**全大陆完全通用，无兑换、无汇率**。\n**币值锚点**：以「**一个普通人一整星期的生活费 = 1 银币 = 100 铜币**」为基准。\n　1 铜币＝一块粗面包、一杯淡酒、一晚最下等的通铺；十几个铜币＝普通人一天糊口。\n　1 银币＝普通人**整整一星期**的生活费，也约等于一把普通武器。\n　1 金币＝一匹好马，也约等于一个普通人**两年**的生活费。\n　1 白金币＝几乎不在市面流通，只用于国家间结算与顶级贵族之间（约合普通人两百年）。\n**阶层收入对照**（贫富差距很大）：流民与苦力一天 3～5 铜币，攒不出一个银币；普通平民（有地或有手艺）一天十几个铜币，一周约 1 银币；熟练工匠与低级雇员一月数银币；小商人与军官一月 1～几金币；领主与大商贾以金币计日，家产以白金币计。\n**经济支柱**：阿尔比昂＝工业制成品；卡兹穆丹＝矿产与锻造（握有定价权）；自由港＝海运、转口贸易、保险与借贷；艾尔维兰＝稀有药材、木材与少量高价工艺品；塔拉辛＝粮食、魔法道具，以及**魔法师升级考试的认证费**（一笔隐蔽而丰厚的收入）；加罗什汉＝皮革、牲畜与雇佣兵输出。\n经济体系简单：无纸币、无复杂金融工具。跨国纠纷一般交由自由港的仲裁所处理。\n**度量衡从简**：长度用「里」，重量用「斤」，各国通用无换算。","religion":"· 精灵——信仰世界树，认为精灵诞生于世界树。但这份信仰源于古老传说，他们自己并未掌握多少真相。\n· 矮人——信仰熔炉之神，相信用心锻造的器物会得到赐福。同时存在邪教，认为以血淬火能给器物附灵。\n· 兽人——无信仰，依靠本能与直觉行动。\n· 亚人——信奉海神，每次出海前都会祈祷。\n· 人类——信仰唯一神「艾欧」，组建了教会。信仰达到一定程度后祷告可具有如魔法般的力量，以治疗与辅助为主。人类聚居处皆有艾欧教堂。信仰越虔诚，祷告威力越强。\n· 魔法师——不信神，相信群星才是指引前路的存在。\n**关于艾欧**：真实存在，偶尔降临展现神迹。但有确切记载的神迹**不超过五次**，且每一次都存在争议——魔法师阵营普遍认为那不过是尚未被理解的星辰魔法。","laws":"**通用**：货币与度量衡全境通用；**冒险者协会的注册凭证各国互认**，是全大陆唯一被六国共同承认的身份证件；见面礼数須按对方国籍调整（对阿尔比昂人行鞠躬礼，对矮人行碰拳礼，对精灵行顲首礼，对兽人则不宜主动伸手）；在城镇内施放战斗系魔法須报备，但各国执行力度差异极大。\n· 阿尔比昂——头衔必须完整称呼，省略即为侮辱。工业区夜间有「熄火令」，但黑烟区从来无人执行。\n· 塔拉辛——魔法师等级证书由卡瑞兰学府签发，升级考试收费，是大陆含金量最高的资质。\n· 卡兹穆丹——锻造师之间以「锤礼」相认。卖出一件亲手锻造的器物后須留下刻记，**终身负责**。\n· 艾尔维兰——外人未经许可靠近银歌森林即视为冒犯。精灵极少与外人通婚，也极少离开东板块。\n· 加罗什汉——没有成文法，一切由首领与先祖认可裁决。外人想加入部落，必須先在血环竞技场证明自己。\n· 自由港——港规高于国法。只要货还在船上，任何国家的通缉令都不生效。","customs":"· **历法**：一日 30 小时、九个时段（午夜、凌晨、早晨、上午、中午、下午、傍晚、黄昏、黑夜），由世界树光芒的色调划分，白昼与黑夜各占 15 小时。一年 360 天、二个个月，采用「冠光历」，以「星回」纪年，以「恒冠」星座回归天顶为标志。\n· **纪元**：以古龙战争为界，此前称「龙劫前」，此后称「龙劫后」。当今为龙劫后数千年。\n· **度量衡**：从简，长度用「里」，重量用「斤」。\n· **称呼**：对陌生人通称「阁下」，熟人直呼其名。魔法师的等级称号是大陆上唯一被各国共同承认的个人头衔。\n· **语言**：通行一种大陆通用语，各族保留母语。精灵与兽人聚居区内通用语未必管用。\n· **出行**：**火车是阿尔比昂独有的东西**——铁路基本只铺在帝国境内，只有两三条干线伸出国境（一条通自由港的港城，一条到塔拉辛的边境换乘站），且由帝国自营、随时可以掉断。**票价极贵**，普通人的数月开销，非商贾、使节或帝国认可者往往买不到票。长途仍以驿站马车、商队与帆船为主，横穿大陆以月计。","timeline":"**龙劫后历 0 年 · 古龙战争**\n生有四足四翼的古龙与大陆所有种族爆发旷世大战。战争分三阶段：古龙压境 → 飞龙首领背刺古龙龙王、转而协助大陆 → 古龙败退后飞龙立即反咬大陆。最终**两败俱伤，没有赢家**：古龙被逐出冰墙之外，飞龙龙王被古龙龙王打成濒死，大陆各族元气大伤。\n**直接后果**：板块分裂（原本相连的大陆被撕裂）；塔拉辛联合国诞生（战后各族联合的产物）。\n**其余历史留白**，待游玩中逐步补充。","conflict":"【沙盒模式】以下只是世界常态矛盾，**不要强行推进任何一条，不要编成「主线」**，谁被引爆取决于玩家做了什么。\n1. 阿尔比昂 ⇄ 塔拉辛——魔法教育认证权被卡瑞兰学府夺走，阿尔比昂一直想拿回来。而塔拉辛与世无争，所以这是**单方面的忌惮**。\n2. 艾欧教会 ⇄ 魔法师——教会认为力量必須由神授予，法师认为可以自行导引。教会有真实的神迹（但史上只有五次），而法师说那不过是未被理解的星辰魔法。神学与科学的对撞。\n3. 兽人 ⇄ 亚人——两国同是被歧视的弱国，本该同气连枝，却互相看不顺眼。这段旧怨有具体来由，但双方都不愿提起。\n4. 自由港 ⇄ 内陆诸国——「港规高于国法」让内陆国家憎恨，却又离不开它的船。\n5. 矮人的定价权——锻造技术垄断让卡兹穆丹握有话语权，当年用技术换矿产的条约仍是旧伤。\n6. 冰墙之外——古龙败退到冰墙之外已数千年。它们还在吗？还会回来吗？而每年都有人想越过那道墙。","mystery":"【逐步揭示，一次最多推进一条。以下都是悬而未决的**问题**，不是答案。】\n1. **树干为何不可见**——传说古早年代站在世界正中心能望见树干，如今只剩及膝野草。是树消失了，还是有什么改变了「观测」这件事本身？\n2. **自然系被误分类**——学府把它编进战斗系，精灵知道那不是魔法，是血脉。是没弄明白，还是装作没弄明白？\n3. **灵魂的归处**——「安息」究竟是什么状态？艾欧教会对此始终沉默。\n4. **亚尔伯特失踪**——卡瑞兰学府创始人、十二级冠冕法师，数年前消失，学府拒绝公开原因。他是主动离开的，还是被带走的？\n5. **冒险者协会的「不可考」**——一支会自动变换材质、无法丢弃、且与一个位置不明的地点实时相连的身份牌。能造出这种东西的组织，为何总部与创始人都不可考？\n6. **亚人的起源**——流传甚广却从未证实的猜测：亚人根本就是人类与动物的混血。教会斥为异端，学者争论不休。\n7. **世界是否只是一个圈**——冰墙天然存在，却是层层同心。「如果世界是一个圈，画圈的是谁？」\n8. **古龙在墙外的数千年**——它们被逐出去之后经历了什么？（**保持开放，不写死**）","factions":[{"name":"阿尔比昂帝国","stance":"维多利亚式工业帝国，君主立宪","goal":"维持科技与工业优势；夺回被卡瑞兰学府拿走的魔法认证权","relation":"看重出身的门第观念；对塔拉辛出身者天然戒备"},{"name":"塔拉辛联合国","stance":"代表制联邦，不干涉主义","goal":"维持贸易与认证秩序，不称霸不扩张","relation":"最包容，但官僚手续繁多"},{"name":"卡兹穆丹","stance":"矮人世袭王权，石语者可否决王位","goal":"保住锻造技术的定价权","relation":"只看技艺不看血脉；对不会手艺的人冷淡"},{"name":"艾尔维兰","stance":"精灵长老议会，闭关","goal":"守护传统，不与外界往来","relation":"疏离。除非你与自然有关，否则很难被理会"},{"name":"加罗什汉","stance":"兽人部落联盟，无成文法","goal":"在北境活下去","relation":"敌视外来者，但极度尊重强者"},{"name":"自由港同盟","stance":"七港代表议会，港规高于国法","goal":"维持海运自由与商业利润","relation":"只要付得起钱，一切都好谈。表面是七座港口城邦的联盟，实则是大陆上唯一的中间商"},{"name":"艾欧教会","stance":"跨国宗教组织，在人类区权势极大","goal":"扩张信仰；压制对神迹的质疑","relation":"对信徒亲切；对魔法师心存敌意"},{"name":"卡瑞兰学府","stance":"名义上隶属塔拉辛，实则独立","goal":"统一全大陆的魔法教育与认证体系","relation":"认天赋不认出身；但只认自己的考卷"},{"name":"冒险者协会","stance":"跨国中立组织，总部与创始人皆不可考","goal":"不可考","relation":"分部遍布全大陆几乎所有聚居地，小到村镇大到城邦。注册门槛极低，升级难度极高。注册后获发一枚**身份金属牌**（锡→铅→钨→金→钴→秘银→精金→叶绿→夜明，材质随等级自动变化），无法自行丢弃，直接连接着协会的「档案馆」，并可一定程度存储信息"}],"places":[{"name":"女王尖塔","desc":"阿尔比昂王权象征，立于都城中轴。塔身嵌满齿轮与蒸汽管道，每逢整点喷出白气并鸣钟。"},{"name":"蒸汽议会厅","desc":"阿尔比昂实权中心。圆形议事厅中央悬着一台巨型差速机，议员投票时转动铜制转盘，结果当众演算并铭刻在铜带上。"},{"name":"皇家魔法学院","desc":"阿尔比昂历史最悠久的魔法学府，曾垄断全大陆魔法师认证。卡瑞兰学府崛起后元气大伤，如今聚集着一批坚持「阿尔比昂正统」的老派法师。"},{"name":"黑烟区","desc":"都城西北的工业贫民窟，终年不见天日——不是没有光，而是煤烟把天盖住了。逃犯、走私者与走投无路的冒险者都在此落脚，也是全大陆情报最便宜的地方。"},{"name":"万叶藏书阁","desc":"精灵的至高藏书地。整座建筑是一株活着的巨树，书册长在叶脉里，摘下叶片展开即是书页。不对非精灵开放。"},{"name":"记忆之池","desc":"精灵用来保存与查阅记忆之处。池水能映出被投入其中的记忆，但看一次就要重新经历一次。长老议会的重要决议皆以此存档。"},{"name":"银歌森林","desc":"精灵的圣地。夜里树木会随树冠光色变化发出低沉嗡鸣，精灵称之为「银歌」。外人未经许可靠近即视为冒犯。"},{"name":"深火熔炉","desc":"卡兹穆丹的心脏，建在火山口上的巨型锻造炉，自矮人建国起从未熄灭。此处锻出的器物都带「炉印」，是全大陆公认的最高品质保证。"},{"name":"石语者王座","desc":"卡兹孟丹的权力奇观。王座不授予君王，而授予一群据称能听懂石头说话的人。没有石语者的认可就无法登位。"},{"name":"回声深渊","desc":"卡兹穆丹最深的矿坑，深到没有矮人知道底部有什么。往里面喊一声，回声回来的时间不对——有时太快，有时太慢，有时回来的不是自己的声音。"},{"name":"血环竞技场","desc":"用巨兽肋骨围成的环形竞技场，部落联盟的首领由此产生。参赛者必須在不杀死对手的前提下让对方认输。"},{"name":"先祖之颅山","desc":"由无数巨兽头骨堆叠而成的圣山。兽人没有神，但他们相信先祖的目光仍在。每个部落的成年礼都要在此独自待上一夜。"},{"name":"巨锚市场","desc":"自由港最大的交易场，围绕一只不知从何处打捞上来的巨锚建成。全大陆的货物都在这里过手，包括很多不应存在于世的东西。规矩：不问来历，不问去向，不赊账。"},{"name":"风暴灯塔","desc":"自由港最东端的灯塔，如今更多是给走私船传信号。守塔人由七港轮值，任期一年——但上一任守塔人已经失踪三个月，七港谁都不愿接手。"},{"name":"卡瑞兰学府","desc":"全大陆魔法师的认证中心，由传奇法师亚尔伯特·冯·克莱因创立。学府只认考卷不认出身，因此被阿尔比昂视为眼中钉。创始人已于数年前失踪，学府至今没有公开原因。"},{"name":"万民穹顶","desc":"塔拉辛的议政之所，一座没有墙壁的巨型穹顶。任何代表都可自由发言，但只有议长能决定何时休会。穹顶外常年有各族商贩聚集，被称作「穹顶下的市场」。"},{"name":"帝国大图书馆","desc":"塔拉辛的知识心脏，收藏着从各国收来的书籍、图纸与手稿，包括不少被原属国禁止外传的技术。对所有人开放，但抄录需缴押金——押金高得让大多数研究者望而却步。"},{"name":"千塔大道","desc":"塔拉辛最著名的街道，两侧耸立数百座法师塔。塔的高度与主人的魔法等级成正比，因此天际线每隔几年就会变一次。塔与塔靠绳索与浮桥相连。"},{"name":"尖刺山","desc":"矗立在西北荒野，一片不属于任何国家的无人地带。山体由无数尖锐岩柱构成。山中栖息着极罕见的飞龙，最深处则沉眠着那位拖着残躯的飞龙龙王。各国冒险者都来过，都留下了一些东西——但没有一样是活着的。"},{"name":"世界中心","desc":"中央板块正中的一片寻常荒野。传说古早年代站在这里可以望见世界树的树干；如今只有及膝的野草、零星碎石和一间无人的驿站。偶尔有朝圣者来这里站上一整天，然后什么也没发生地离开。"}],"npcs":[{"name":"亚尔伯特·冯·克莱因","role":"卡瑞兰学府创始人 · 魔法师十二级「冠冕」（史上极少数获此衔者之一）","motive":"数年前失踪，学府从未公开原因。他是主动离开、被带走，还是找到了什么？此事与「树干为何不可见」可能存在联系，但不要急于揭底。","relation":"尚未与主角相遇。他是全大陆魔法师共同的话题，莉薇娅在千塔大道上不可能没听过这个名字。"},{"name":"格里昂","role":"冒险者协会「银牌」冒险者 · 古龙血脉的继承者","motive":"远古炼金术士研究古龙血脉的产物，以人类之躯完美继承了古龙血脉。最初以一颗蛋的形态在隐秘山洞中休眠多年，直到二十三年前才破壳而出，出生即是成人模样。身材高大、肌肉分明却不显壮，眼睛是竖瞳。古龙血脉目前只带给他强悍的身体与恢复力。他靠洞中遗留的手记与书本拼出了自己的来历和部分历史，后来成为冒险者，只为有朝一日越过冰墙去寻找古龙——他想弄清自己究竟是什么。","relation":"尚未与主角相遇。他是莉薇娅走出家门之后，最可能成为同伴、也最危险的那一类人。"}],"style":"欧陆奇幻（翻译腔）","scale":"成人向剧情","person":"第三人称限定","focus":"均衡","charName":"卡尔","role2":"钨牌冒险者","look":"二十出头，短发，左眉一道旧疤。皮甲是别人的旧货，磨得很亮。","persona":"话不多，习惯先看退路；对钱很计较，但不会把同伴丢下。","back":"从塔拉辛边境的小村走出来。父亲是猎人，教他的第一件事是「先看清退路」。十六岁那年母亲病故，家里的债压在父亲身上；他进城在协会登了记，三年里靠杂活与护送攒到钨牌。他识得的字不到三百个，但能凭脚印判断来者是几个人、有多重。","goal":"凑够钱把妹妹接出村子；顺便确认自己到底适不适合干这一行。","secret":"上次队伍里死了人，是他判断失误。他从没跟任何人提过。","opening":"塔拉辛边境的「灰石驿站」，协会分部的布告板前。雨季刚过，路上全是泥。布告板上钉着七张委托，三张已被撕走，剩下的边角都卷了。柜台后的登记员打了个哈欠，把钨牌推回给你：「新到的？小心点，最近往北的路不太平。」","equip":"旧皮甲、短剑、猎刀、登山绳（二十步）、油布披风","skills":"野外生存 7、短剑 6、跟踪 6、撬锁 4、骑马 5、帝国通用语 3","items":"钨牌一枚、银币 12、铜币 40、干粮六天、火绒、一卷旧地图、伤药两包","clues":"布告板上有一张委托的落款被人刮掉了；登记员袖口沾着没干的血。","rules":"· 世界观、势力、货币与一切设定**完全继承「🏔 艾厄洛姆德大陆」**，不要另造一套。\n· 这是新人冒险者的开局：主角眼下**接不了高级委托**，遇到超出 D 级的东西应当逃、应当求援、应当用脑子，而不是硬拼。\n· 队伍的构成、成色、忠诚度都靠剧情自然形成，不要一开场就送他一个完美的队伍。\n· 协会的金属牌是不可伪造的身份，也是他的枷锁：欠账、违约、放鸽子都会记在牌上。","bans":"· 不要让卡尔一开场就有超出钨牌的实力或人脉。\n· 不要让 NPC 因为他「是主角」就无条件信任他。\n· 不要写出这个世界的科技与货币体系里不存在的东西（尤其不要出现火器、铁路之外的现代产物）。","canon":"· 魔法与祷告**同源**，皆来自世界树转化后的「树息」。\n· 树息是**均匀弥漫的场**，施法威力与所处位置无关；天赋全大陆均匀分布。\n· 魔法道具是标准化导引器，凡人可用；「自行导引」才需要天赋。\n· 死者不可复活；死灵系不役使灵魂，只能与尚未安息的灵魂沟通。\n· **树干不可观测**。大陆居民不知道世界树的全貌，更不知道自己身处树干内部。\n· 冰墙**天然存在**，且不止一道，层层同心向外。\n· 纪元名「**龙劫**」；当今为龙劫后数千年（不写确切数字）。\n· **飞龙龙王没有死**，仍在尖刺山。\n· 古龙战争：飞龙首领背刺古龙龙王、协助大陆，战后反咬大陆，最终两败俱伤。\n· **冒险者协会的升级门槛**：钨牌升金需同时拥有**每个国家首都的协会证明**与相应功绩。银牌是「有足够功绩但没有证明」而衍生的特殊变种，存世极少——**每一个都是一等一的高手，真实实力高出两到三个等级**。"},{"name":"🌙 武侠 · 长安夜雨","title":"长安夜雨","tagline":"眉心的那点朱砂，已经要了四条命","era":"大常二十二年。冷兵器为主，火器粗笨易炸，仅禁军少量装备。雕版印刷廉价，邸报与话本流通，消息比人走得快。驿站三十里一铺、三百里一换马；镖局兼走货与传书，构成长途通信网。官银成色九成，私铸钱掺铅。","geo":"中原腹地，长安为都，城分宫城、内城、外郭，一百零八坊夜闭晨开。北有雁门关扼草原，南为水乡泽国，西接大漠，东临海盐场。真正的命脉是水路：漕帮握长江，盐帮握淮河，镖局握官道。","races":"仅人类。人以门派、世家、帮会、师承划分身份——籍贯其次，师承最重。「你师父是谁」比「你姓什么」值得追问，而师门已灭的人，在江湖上等于没有来处。","threat":"· 寻常匪盗与山贼——数量最多，也最不体面\n· 江湖仇杀——四大门派与各地帮会常年摩擦，死了人不报官，官府也不愿管\n· 朝廷鹰犬——缉事司专办「涉武」大案，办事不讲江湖规矩，刑讯不留记录\n· 邪功异术——蛊、毒、傀线、易容换皮，江湖上确实有，但都稀少，遇到一次能吹一辈子\n· 三十年前被灭门的「朱砂堂」——本该不存于世","power":"内力源于经脉行气，靠吐纳与桩功日积月累。内家重养气、后劲绵长；外家重筋骨、出手极快。上乘武学讲究「劲」——招式只是容器，同样的招式在不同人手里可以是三流功夫，也可以是一流杀法。","powerRank":"三流 → 二流 → 一流 → 绝顶 → 大宗师。全天下绝顶不过二十人；大宗师当世仅存三位，皆已多年不再出手，名字写出来就够震慑一城。","powerCost":"强行催动超过自身极限的内力会伤及经脉，轻则三月不利，重则终身废功。点穴留有痕迹，高手可据此推门识派。练功逆行者，手少阴经会留下无法遮掩的青色。","powerLaw":"死人不能复活；内力无法凭空渡给别人；被挑断的经脉不能复原；毒必有解，但未必来得及取药。","politics":"朝廷式微：宦官掌内廷，藩镇握外兵，天子政令出了关中便打折扣。江湖上四大门派把持武林，明面尊朝廷，实则各据一方，靠联姻、比武与共同的敌人维持平衡。谁先动手，谁先被三家合围。","economy":"银两与铜钱并用，1 两银 ≈ 1000 文，1 贯钱 = 1000 文。一斗米二十文，一桌像样的酒席一两二钱；镖局走一趟三五百里，脚钱两三两，路上死人不管赔。江湖人之间「人情」能抵银子，但人情要还，且利息由对方定。","religion":"佛道并存，少林武当各占其一。江湖人多不信神，却极重忌讳：不敬死者、破人坟茔，是比杀人更重的罪；寺庙道观是中立地，刀剑不入山门。","laws":"官府管不到江湖事，也乐得有人替它管。门规严于国法——欺师灭祖者天下共诛，同门相残逐出山门，叛门者「除名」，从此江湖上不再有人承认他存在过。","customs":"见面抱拳，自称「在下」「晚学」，称对方「阁下」「兄台」。长辈赐酒须饮尽。刀剑入酒楼须解下、横架门侧。名号一旦立下不可自行更改，改号等于重开一世。行走江湖要递拜帖，见帖如见人；拜帖不收，就是不留情面。","timeline":"大常三年：玄机榜立榜，天下高手以榜定序\n大常二十一年：四大门派会盟于嵩山，定「不涉庙堂」之约\n大常二十二年春：玄机榜列名者三人相继身亡，眉心各有一点朱砂\n大常二十二年秋：主角师父遇害于无名山门，山门被焚","conflict":"有人正用同一种手法猎杀玄机榜上的高手：手法、间隔、死者身份，全都指向一个三十年前就已经不存在的门派。杀这些人不是目的——凶手要的是逼出某个隐世之人。","mystery":"每位死者眉心都有一点朱砂印，与三十年前灭门的「朱砂堂」行凶手法一致。\n沈九似乎认得凶手用的兵器，却始终不肯说。\n苏青鸢的「死讯」是她自己散出去的。\n玄机榜第十位至今空着，一年来没有人敢补。","factions":[{"name":"天枢阁","stance":"正道","goal":"维持武林既有秩序，查明「朱砂印」连环命案","relation":"主角的潜在雇主，用他而不信他"},{"name":"血罗刹","stance":"邪道","goal":"趁乱重排玄机榜，搅散四大门派的盟约","relation":"主角的追查对象，也可能是被人利用的刀"},{"name":"缉事司","stance":"朝廷","goal":"把所有涉武大案收归朝廷，顺势收编江湖","relation":"谁都可能被它找上门"},{"name":"漕帮","stance":"中立","goal":"保住在长江上的买卖，谁的账都不欠","relation":"消息最灵，代价是替它办一件事"}],"places":[{"name":"长安城","desc":"天下首善之区，也是江湖消息流转最快的地方。一百零八坊，坊门夜闭，犯夜者笞二十。"},{"name":"无名山门","desc":"主角师门旧址，半年前一把火烧成白地。后山的剑坟还在，师父的剑没埋在坟里。"},{"name":"朱砂堂旧址","desc":"三十年前被四派联手剿灭，如今是一片荒村。村口石碑被磨平了字，石缝里能刮出朱红。"},{"name":"雁门关","desc":"北疆咽喉，关外是草原。关上的守将已经三年没领到足额军饷。"}],"npcs":[{"name":"沈九","role":"天枢阁执事","motive":"借主角之手试探血罗刹，不愿自己人涉险","relation":"合作但有所保留，话说一半"},{"name":"苏青鸢","role":"失踪的前任玄机榜第九","motive":"假死脱身，正在独自追查真正的凶手","relation":"暗中观察主角，必要时出手"},{"name":"断刀陈","role":"长安西市的说书人，前代一流高手","motive":"手已经废了，靠说书吃饭；他还记得三十年前的每一个细节","relation":"消息的源头，每问一件事要替他还一笔旧账"}],"style":"中式古典（半文半白）","scale":"成人向剧情","person":"第三人称限定","focus":"解谜与线索推演","role2":"游方剑客","look":"二十七八岁，身形清瘦，右手虎口有厚茧，行囊上补过三次针脚","persona":"沉稳克制，话不多，认死理；不惯与人同桌吃饭","back":"你是无名山门最后一个传人。半年前师门被一把火烧尽，师父死在门槛上，眉心一点朱砂。你只抢出了师父的断剑。这一年你在江湖上走了两千七百里，没人肯为你作证，也没人相信「无名」这个名字。","goal":"明面目标：找到凶手。真实渴望：证明自己配得上「无名」这两个字。","secret":"你其实看见了凶手的一角衣袂，但因为恐惧没有追出去。","opening":"长安城郊的官道旁，一辆翻倒的马车横在雨中。车辕上插着一支玄色羽箭，血迹被雨水冲得只剩淡红。车旁跪着一个浑身发抖的少女，怀里死死抱着一只木匣。她抬头看你，先看的不是你的脸，而是你腰上的剑——那柄断剑。","equip":"武器：断剑 — 师父遗物，剑身三寸处断裂，断口处刃纹齐整\n护甲：灰色劲装 — 内衬一层旧皮\n随身：拜帖三张（皆已作废）","skills":"无名剑法：5\n轻功：4\n医术：2\n江湖见识：3","items":"蓑衣\n疗伤药 ×3\n半块山门令牌\n银两 ×20","clues":"凶手用的是左手\n朱砂印与三十年前的朱砂堂有关","rules":"· 这是**低武世界**：没有法术、没有神魔、没有奇门遁甲里能真的飞天的那种东西。一切都要落在「人」能做到的范围内。\n· 江湖是**长期生态**而不是单一主线：镖局、盐帮、衙门、说书人各有自己的日子，主角不推，它们也在动。\n· 高手不是靠等级压人：一个一流高手的可怕之处在判断、经验与出手时机，而不是数值。再强的人也会被十把刀围死。\n· 江湖礼数必须当真：拜帖、名号、门规、人情，违反它们的社会代价要如实写出来。\n· 主角的实力由玩家自己养，不要预设他是天才。","canon":"· 内力不能凭空传给他人，也不能靠服药一夜暴增；丹药顶多让人少走三年弯路。\n· 死人不能复活，江湖上没有「假死」之外的奇迹，而假死必须提前安排。\n· 玄机榜只列二十位，榜上有名者皆可查，但榜的立榜人从未露面。\n· 四大门派之间有不涉庙堂之约；谁先撕毁，谁先被三派合围，此约至今有效。\n· 官府对江湖的容忍有底线：一旦伤及朝廷命官或漕运，缉事司就会介入，届时江湖规矩一概不认。"},{"name":"🐉 修仙 · 问道青冥","title":"问道青冥","tagline":"长生是一条往上走、走到没人回来的路","era":"无确切纪年，以甲子记事。凡俗仍是农耕与手工业，无火器；修行界以符箓、阵法、丹药、法器代行技术之职——一张「净水符」能顶一座水车，一枚「传讯玉简」能顶三百里快马。修行者与凡人同住一城，却如隔世。","geo":"陆名沧洲，分九域，中州最盛。宗门依灵脉而立，山门多悬于云海之上的孤峰，靠索桥、阵法与飞行法器往来。东有**归墟**，万水所归，入者不返；西有断魂戈壁，寸草不生；北为妖荒，妖族所居；南是瘴林，湿毒弥漫。凡俗城镇沿河谷分布，最大者「白云渡」，是修行者与凡人交易的中枢。","races":"人类为主，另有**妖族**（草木禽兽修成，可化人形，被正统宗门视为「非我族类」）、**灵族**（生而有灵根，天生通感草木，人数极少，多被宗门当作传承之物）、以及**人蜕**——被夺舍之后剩下的人，神魂已灭，躯壳仍在行走。","threat":"· 妖兽与妖将——妖荒边缘最常见，越往北越强\n· 散修劫道——无门无派，专挑落单弟子与低阶修士下手，最擅长毁尸灭迹\n· 尸魈与魂修——万魂殿以活人神魂炼器，正道的死敌，也是最难抓的敌人\n· 天劫——不针对人，针对境界；越往上，劫越不讲道理\n· 人蜕——你杀不掉它，因为它已经不是你认识的那个人","power":"修行以**灵气**入体，循经脉炼于丹田，层层开脉。九境：**引气 → 筑基 → 金丹 → 元婴 → 化神 → 炼虚 → 合体 → 大乘 → 飞升**。前四境人间常见；化神以上，一域不过数人；大乘当世仅二人，皆已闭关不出。","powerRank":"每一境可分初期、中期、后期、圆满。**跨大境的差距无法用技巧弥补**——筑基对金丹，就是蝼蚁与人的差距；但同一境之内，功法、法器、阵法、地利与心性都能决定胜负。","powerCost":"修行真正的货币是**寿元与时间**：筑基增寿百年，其后每一境所增愈少，而所耗愈多。强行突破可能走火、金丹碎裂、神魂受损，受损不可逆。灵气不是空气，取用灵脉会留下痕迹——挖得太狠，一域十年不生。","powerLaw":"灵气守恒，无人能凭空造物；夺舍不可逆，且被夺者神魂必灭；天劫不可代受，只可借阵法削弱；死者不与生者言语，除非以魂修邪法，代价极大；**飞升者从未有一人回来，也没有任何一条关于飞升之后的记载。**","politics":"宗门林立，以**三宗六派**为尊，彼此以灵脉、传承与人情相持，明面上共尊一个「道盟」的空名。凡俗朝廷设**监天司**，名义上管理「涉修行者」的一切事务，实则要看三宗的脸色办事。真正的权力在灵脉，而不在玉玺。","economy":"凡俗用铜、银、金；修行界用**灵石**（下品、中品、上品，百进制）、丹药与法器。灵石既是钱，也是燃料与阵材——用掉就没了，所以修行界的「钱」是**消耗品**，这决定了所有人都缺灵石。一枚下品灵石约合白银十两；一枚固元丹值三枚下品灵石；一件中品法器能换一座凡俗小城。","religion":"凡俗拜仙人与城隍土地，求的是风调雨顺；修行者不拜神，只论「道」——但他们确实敬畏天劫，把它当作「天地对人的态度」。仙人的画像在城中随处可见，可从来没有人见过真正的仙人。","laws":"宗门戒律：不得以道法欺凡、不得屠戮同门、不得修习夺舍邪法、不得擅入他宗禁地。凡俗律法由官府管，一旦牵涉修行者，一律移交监天司。最重的罪是**夺舍**——无论修到哪一境，犯者道盟共诛。","customs":"互称「道友」，同门称师兄师姐而不称官职。赠丹受丹有礼数：受者须回礼，回不起便要记人情。剑修不与人换剑，琴修不入闹市。拜师前须过**问心三问**，答得不好，宁可终身不传。修士对凡人一律称「凡人」，谈不上轻慢，只是划清了界限。","timeline":"三千年前：第一位飞升者步入天门，归于归墟方向，**此后无一人回来**\n八百年前：妖荒北侵，三宗联手筑起「镇妖长墙」，墙成之后妖荒再未越界\n百年前：三宗会盟立规，定夺舍为天下第一禁\n二十年前：青冥宗封剑冢，宗师闭口不谈缘由，山门自此只出不进\n今岁：剑冢异动，夜夜有剑鸣传出三十里外","conflict":"剑冢异动不是小事——那是青冥宗葬历代宗师佩剑之地。与此同时，有人在暗中收购「飞升者遗蜕」：据说人飞升时，会有一具空壳留在原地。若遗蜕是真的，那么「飞升」也许并非离去，而是一件可以被研究、甚至被利用的事。","mystery":"飞升之后到底是什么？三千年来无一例记载，连一个从上面递下来的字都没有。\n青冥宗二十年前封剑冢，封的不是妖，是「自己家祖师的东西」。\n主角的灵根在测灵盘上显示为「无」——但无灵根的人不可能在雨天听见剑鸣。\n妖荒深处有一座**倒悬的山**，山尖朝下，插在荒原里，妖族世代不靠近它。\n归墟的水，从来没有满过，也没有干过。","factions":[{"name":"青冥宗","stance":"正道之首","goal":"守住剑冢，不让任何人知道二十年前剑冢里发生了什么","relation":"主角出身之地，也是他最想进去的地方"},{"name":"丹霞谷","stance":"中立逐利","goal":"把丹药生意做到九域每一座城，不掺和道盟纷争","relation":"谁都不得罪的中间人，消息极灵"},{"name":"万魂殿","stance":"邪道","goal":"收集足够的神魂以补全殿主的残缺元婴，为此可以屠一处凡俗村落","relation":"最直接、最无人性的威胁"},{"name":"监天司","stance":"凡俗朝廷","goal":"把修行者纳入朝廷秩序，至少要让三宗给凡人一个说法","relation":"主角最可能求助、也最会被利用的势力"},{"name":"妖荒","stance":"异族","goal":"守住长墙以北，不许人类再往里挪一寸；族内亦有主战与主和之争","relation":"墙的另一边，未必是敌人"}],"places":[{"name":"青冥剑冢","desc":"青冥宗后山，葬历代宗师佩剑。封山二十年，夜夜有剑鸣。冢前石碑写着八个字：见剑如见，其人之死。"},{"name":"丹霞谷","desc":"九域最大的丹坊，谷中终年药香。谷规只有一条：进了谷，谁也不许动手。"},{"name":"白云渡","desc":"沧洲最大的凡俗城镇，修行者与凡人交易的中枢。这里有整个九域唯一一家明码标价收灵石的钱庄。"},{"name":"归墟","desc":"万水所归之处。水面平得不像水，投石不入，入者不返。三千年来的飞升者，据说都是朝这个方向走的。"},{"name":"倒悬山","desc":"妖荒深处，山尖朝下插在荒原里，山体上刻满无人能识的字。妖族世代绕行，视之为禁地。"}],"npcs":[{"name":"云无咎","role":"青冥宗内门大师姐，筑基圆满","motive":"她亲历过二十年前的封山之夜，此后从不出山门，也从不提起","relation":"对主角的态度暧昧：既想护他，又怕他往下问"},{"name":"柳青檀","role":"丹霞谷少谷主","motive":"把谷里的生意做到修行界之外，为此可以跟任何人做买卖，包括邪修","relation":"最可靠的信息与丹药来源，但每一次都要收钱"},{"name":"陆沉","role":"监天司缉查使，凡人出身","motive":"他的妹妹死于一次修行者之间的斗法，余波扫平了半条街；他要一个说法","relation":"执法者，也是唯一把凡人当人的修行界官员"},{"name":"无名老者","role":"白云渡卖汤饼的老头","motive":"三百年前也是一代宗师，如今只想安静地把剩下的寿元过完","relation":"看似无关的人，或许知道最老的那件事"}],"style":"中式古典（半文半白）","scale":"成人向剧情","person":"第三人称限定","focus":"环境与感官","charName":"沈砚","role2":"青冥宗外门弟子","look":"十七岁上下，瘦，指节上有常年握剑留下的硬痕。道袍洗得发白，右袖口补过一次。","persona":"寡言，认死理，不信「命该如此」这类说法；对长辈礼数周全，对同辈一概寡淡。","back":"你十岁被青冥宗带上山，测灵盘上显示「无灵根」，按规矩本该遣返凡俗。是一位不肯署名的长老说了句「再看看」，你才留了下来。此后七年，你在外门做着杂役的活——扫地、劈柴、看守药圃，同时把内门弟子背不下来的剑经整本抄了七遍。你至今没有开脉。","goal":"明面目标：开脉，留下来。真实渴望：弄清楚自己为什么能在雨天听见剑冢里的剑鸣。","secret":"你第一次听见剑鸣是在封山那年，那时你才一岁——严格说，那不是听见，是「想起来」。你有一件不属于你的记忆。","opening":"雨下了三天。你在药圃收最后一垄灵草，忽然听见远处传来一声极轻的剑鸣——山门里的所有人都知道，剑冢封着，二十年不响。抬头时，雨幕中站着一个人，穿着青冥宗的内门道袍，可你从未见过这张脸。他看着你，说：「你听得见，是不是。」","equip":"武器：无名铁剑 — 外门配发，剑脊有一道砂眼\n护甲：外门道袍 — 前襟洗得发白\n随身：抄了七遍的剑经 — 边角被翻烂","skills":"青冥剑经：2（徒有其形）\n草药辨识：4\n识字与抄录：4\n轻身法：1","items":"下品灵石 ×3（攒了一年）\n辟谷丹 ×5\n药圃钥匙\n半枚无字玉牌（入山时挂在颈上）","clues":"剑经第七页有一行小字，不是你抄的\n无字玉牌在雨天会变温\n那位不肯署名的长老，至今没有露过面","rules":"· 修仙是**长线成长**：突破要资源、要时间、要心境，不能靠奇遇一夜登天。请把「卡在境界上」的焦躁当作主要张力之一，而不是障碍。\n· **境界差距必须是硬差距**。筑基打金丹没有任何侥幸；反过来，同境界内胜负由准备与判断决定。\n· 世界是沙盒：宗门有宗门的日常，凡俗有凡俗的烟火，不要把所有事都往「飞升之谜」上引。\n· 修行者也不是神仙：他们有病痛、有寿元、有宗族、有人情债，会怕死，也会为了灵石下作。\n· 主角的成长节奏由玩家决定，不要预设他是「天纵奇才」或「天命之子」。","canon":"· 灵气守恒，无人能凭空造物；采空一处灵脉，该地十年不生草木。\n· 夺舍不可逆，被夺者的神魂必灭，此为天下第一禁，犯者道盟共诛。\n· 天劫不针对人，只针对境界；可以借阵法削弱，绝不能由他人代受。\n· 三千年来**飞升者无一人返回**，世上不存在任何关于「天门之后」的可靠记载。\n· 妖族可化人形，但化形需千年，且化形之后仍可被识破——妖气藏不住。\n· 死者不与生者言语；万魂殿的「通话」是邪法，代价以活人神魂计。"},{"name":"🌃 赛博 · 霓虹坟场","title":"霓虹坟场","tagline":"在这个城市，记忆是可以抵押的东西","era":"2087 年。神经接入、义体置换、记忆编辑技术成熟且廉价。城市按海拔分层：地表是企业区（0m，永远晴天），旧城区（-30m，全年人工降雨），第九区（-90m，没有自然光）。天上的雨由气象公司按订阅制投放——交不起订阅费的区域，会被调到「多云」。","geo":"新港市，环山临海的巨型都市，人口一千四百万。上层的玻璃幕墙倒映着云，下层的水泥墙面上长着霉菌。垂直交通靠塔梯与货梯，塔梯刷工牌，货梯刷卡。城市真正的地图是管网图——水、电、数据、通风，四张图各不完整，把它们叠起来才能找到一条不被记录的路线。","races":"人类、**改造人**（义体率超过六成）、**义体人**（原生肉体不足一成，多已无法脱离维保）、**空白者**（神经记录被删除的人，占总人口约百分之二）。人类与改造人之间的界线在不断下移——去年还是「人」的配置，今年算「过时」。","threat":"· 街头帮派——旧城区按街划界，收保护费也提供秩序\n· 企业安保——管辖权重于市警，开火不需要报备\n· 佣兵与追杀队——外包给第三方，出了事谁也认不下来\n· 数据幽灵——死在上线状态下的人，皮层里会残留一段可被利用的东西，越深越危险\n· 沧溟的清场队——不抓人，只删档；被删过的人自己都不知道少了什么","power":"力量来自**接入权限**。企业垄断高等级协议与密钥，街头黑客靠破解固件、撬交换机、借用别人的身份拿到低阶权限。权限的世界里没有「强弱」，只有「你有没有那把钥匙」。","powerRank":"脚本小子 → 街头黑客 → 冰破手 → 幽灵。全市幽灵级不超过二十个，其中至少五个其实已经死了——他们只是还没被发现。","powerCost":"深度接入会造成神经灼伤，累积过量则永久失忆；义体需要定期维保，断供会排异，排异一旦开始就不会停。借别人的身份接入，会在对方系统里留下自己的指纹——这是这行最基本、也最常见的死法。","powerLaw":"记忆一旦被物理删除便无法恢复；意识无法被复制（复制出来的只是行为模型，不是人）；人在接入状态下死亡会烧毁整块皮层，连带周围两米的设备。","politics":"三大企业——**沧溟**（义体与神经）、**天枢**（气象与能源）、**白鲸**（物流与港口）——名义上服从市政厅，实际上市政厅是它们的联合办公室。市议会里有一半席位由企业提名，另一半由企业资助的人竞选。","economy":"信用点（CR）为通用货币，匿名转账，抽成三成是行价。旧城区仍流通旧美元现金。一碗合成面 8 CR，一次义体维保约 200 CR，一份干净的新身份 3000 CR 起。企业的员工用「配额」代替工资——配额只能在他们自己的店里花。","religion":"主流无信仰。地下流行**数据教**：相信意识可以通过数据永存，第九区的空白者中有大量信徒。教义只有一句：「被记住，即是不死。」大断电之后，这句话传得比任何广告都快。","laws":"地表区严刑峻法，旧城区基本没有警力。企业安保的管辖权大于市警。未登记接入是重罪。企业之间的纠纷不走法院，走仲裁所——仲裁所由三家企业出资合办。","customs":"见面不握手，交换接入码就是问候。称陌生人为「哥们」「姐们」；讽刺时用「公民」。「掉线」是骂人话，指思维迟钝；「干净」是褒义，指没有案底、没有义体、没有欠账。旧城区的人从不问对方的全名。","timeline":"2079 年：沧溟推行全民神经登记\n2080 年：大断电，三日黑暗，数十万人的神经记录消失\n2081 年：第九区建立，两万名空白者被安置进地下\n2084 年：沧溟发布「记忆可抵押」金融产品，一夜之间成为全市最大的债主\n2087 年：故事开始","conflict":"沧溟即将推动「记忆实名制」法案：所有无法出示完整神经记录的人，将被合法地判定为「非本人」——财产、身份、亲属关系一并作废，等于合法地清除掉两万名空白者。灰鸦手上有能推翻大断电官方说法的备份，但他需要有人活着把它送出去。","mystery":"大断电不是事故，是沧溟主动执行的一次数据清洗。\n主角自己的神经记录缺失了整整十一天，而那十一天里，他签过一份没有印象的合同。\n灰鸦的右手是假的——他根本没有能力独自使用那份证据，所以他需要一个「手」。\n第九区的下水道里，有一批从未被登记的义体，出厂日期是大断电之前。","factions":[{"name":"沧溟企业","stance":"霸权","goal":"垄断神经记录备份技术，清除所有空白者以掩盖七年前的真相","relation":"主角的最大威胁，也是他义眼的原厂"},{"name":"第九区自治会","stance":"反抗","goal":"为空白者争取合法身份，哪怕只是一张能证明「我在此处存在过」的纸","relation":"潜在盟友，但内部主战派与谈判派已经快打起来了"},{"name":"天枢能源","stance":"骑墙","goal":"在法案表决前把电价再涨一次，顺便把库存的旧电池清出去","relation":"谁给钱卖给谁，也知道所有人的用电量"},{"name":"白鲸物流","stance":"中立","goal":"保住港口的控制权，任何货物都不问来路","relation":"能把人送出城，也能把人送进第九区"}],"places":[{"name":"修表铺","desc":"主角在旧城区的据点，兼作情报中转站。后门只有三个人知道。"},{"name":"第九区","desc":"海拔 -90m，没有阳光，靠通风井换气。两万名空白者被安置在这里，平均寿命比地表低十四年。"},{"name":"沧溟总部","desc":"地表区最高的三栋塔楼之一，一楼大厅有一面三百米长的镜面墙——所有访客都会在里面看见自己。"},{"name":"塔梯 7 号","desc":"连接地表与旧城区的员工通道，刷工牌进。上一班岗的保安已经三年没换过人。"},{"name":"三号屠宰场","desc":"旧城区的旧食品厂，现在是黑市义体最大的集散地。这里的义体不问出处。"}],"npcs":[{"name":"灰鸦","role":"前沧溟网络安全主管","motive":"想把七年前的备份公之于众，同时保住自己的命","relation":"主动联络主角，但每一句话都可能是在测试他"},{"name":"R-7","role":"主角的旧搭档","motive":"已接受企业改造，记忆被清洗，正在追捕主角","relation":"最危险的敌人——他记得的一切都被改过，唯独枪法没变"},{"name":"阿绫","role":"旧城区的掮客，十六岁","motive":"她妹妹是空白者，她想攒够 3000 CR 买一份干净身份","relation":"主角的活源，也是他唯一会主动保护的人"},{"name":"老周","role":"三号屠宰场的义体师","motive":"他的手在十年前的一次事故里废了，现在靠徒弟；他还在等一个能替他报仇的人","relation":"只要价钱合适，什么都肯修"}],"style":"冷硬简练","scale":"成人向剧情","person":"第三人称限定","focus":"解谜与线索推演","role2":"前企业安保承包商","look":"四十岁上下，左眼是廉价义眼，走路时右腿有轻微卡顿，外套口袋里常年放着一块擦镜布","persona":"冷硬、务实、不轻易承诺，但承诺了就一定做到；不喝酒，因为喝酒的时候反应会慢半拍。","back":"你曾替沧溟处理「不收尾的活」。三年前的一次任务中，你在目标家里看到了一张自己小时候的照片——你不记得拍过。你跑了，从此靠修表和接些脏活过日子。你换过三次身份，每一次都留下一份记录，每一份记录里都少一点东西。","goal":"明面目标：查清那张照片的来历。真实渴望：找回缺失的那十一天。","secret":"你的神经里有一份被加密的企业档案，你自己并不知道——而它已经开始影响你的义眼延迟。","opening":"凌晨三点，铺子后门的电子铃响了七下——那是只有你知道的老暗号。门外站着一个穿灰色雨衣的人，兜帽下露出半张被信号纹身覆盖的脸。他把一只手掌贴在门框上，扫描仪的红光扫过他的掌心，停了三秒，然后跳出一行字：身份不存在。","equip":"武器：老旧手枪 — 弹匣容量 8，膛线磨损\n义体：廉价左义眼 — 有 0.3 秒延迟\n工具：便携接入器 PK-2","skills":"枪械：3\n潜入：3\n企业流程知识：4\n街头交涉：2","items":"伪身份芯片\n义眼校准器\n止痛贴 ×5\n信用点 350（记账用）","clues":"照片的背景是沧溟总部一楼大厅的那面镜面墙\n你缺失的十一天里，账户上多过一笔 3000 CR 的入账","rules":"· 技术要**可信**：所有「黑科技」都得有代价、有接口、有可被追查的痕迹，不要把黑客写成魔法。\n· 这是**阶级故事**：同一个城市里，地表的人讨论订阅套餐，第九区的人讨论通风。写清楚海拔每下降三十米，空气和寿命各减多少。\n· 企业不是铁板一块：部门之间、外包商与正式员工之间都有裂缝，主角能利用的正是这些裂缝。\n· 记忆被删的人自己不会认为自己被删过——这是一种无法自证的处境，请把它写成真实的困境。\n· 主角不是超人：义体会坏，枪会卡壳，身份会过期。","canon":"· 记忆一旦被物理删除无法恢复；造出来的「复原」只是行为模型，不是那个人。\n· 意识无法被复制，也无人能证明数据教是对的。\n· 接入状态下死亡会烧毁整块皮层，连带两米内的设备——这被用作同归于尽的手段。\n· 空白者的神经记录在官方系统里显示为「未登记」，因此他们在法律上不算完整的人。\n· 三大企业共同出资的仲裁所，是这座城市唯一还能判企业败诉的地方。\n· 大断电的官方说法是「太阳风暴」；所有公开数据都能支撑这个说法，除了灰鸦手上那一份。"},{"name":"👁 都市灵异 · 临江异闻","title":"临江异闻","tagline":"城市把不该存在的东西，写进了拆迁公告里","era":"当代。智能手机、监控、外卖、地铁，一应俱全。市政档案里有一层不上报的东西：老城拆迁时发现的部分地下管网，图纸与实际不符，「差额」被标注为「待核」，一待三十年。","geo":"临江市，长江边上的老工业城，常住人口四百万。河西是老城：纺织厂、工人新村、棚改停了八年的废墟。河东是新区：玻璃幕墙、地铁三号线、写字楼夜里十一点还亮着。两岸之间是三座桥，和一条谁也说不清有多深的**阴渠**——清末扩建下水道时留下的废弃层，就在地铁隧道下面一点点。","races":"只有人类。但有些人已经不是原来那个人了：**顶替**。外表分毫不差，说话习惯、走路姿势都对，只有极少数细节对不上——镜子里的动作慢半拍，手机相册里照片少几张，旧照片上的位置被人占了。它们不害人，它们只是「住」进了别人的日子。","threat":"· 游魂——残念，最弱，多数只是重复做一件事，一炷香能送走\n· 替身——顶替活人身份的东西。它不杀人，它更喜欢人自己走掉\n· 尸养——以尸身养出的东西，多发于旧医院、殡仪馆、长期空置的宿舍楼\n· 老物——附在旧家具、旧照片、旧钟表上的执念。它们讲道理，只是道理不是人的道理\n· 阴渠里的「它」——从未被完整看见，也从来没有人说清有几只\n· 术者——是人。有人把规矩明码标价地卖，也有人反过来帮那边的忙","power":"没有法术可修。有用的只有三样：**看见**（阴阳眼，天生或后天意外撞开，开了就关不上）、**规矩**（符、讳、礼数、时辰、称呼——规矩本身就是力量，写对就管用）、**代价**（借力必还，问卦要付东西：血、记忆、寿数，或者别的）。","powerRank":"行内按「能看见什么」分档：\n**一叶**——只看得见影，分不清是什么\n**二目**——能分辨、能对话，最危险的一档，因为会被告知不该知道的事\n**三门**——能立规矩、能封、能送\n**四闭**——能把自己封起来，从此不再看见（多数人的终点）\n**五不归**——看见了不该看的，回不来。这一档没有活人登记在册","powerCost":"每用一次规矩，身上都会留痕：手指变凉、影子变淡、记不住昨天中午吃的什么。借来的力量必须连本带利地还，还不出就用别的东西抵——先抵记性，再抵寿数，最后抵「别人还记得你」。","powerLaw":"民俗禁忌是**硬规则**，不是心理暗示：夜里有人叫你的名字，回头就是应了；不接第二次敲门，否则门会一直响到天亮。被顶替的人自己不会说破。没有超能力——所有事都能用规矩处理，也都不能用蛮力解决。死者的东西不能在自己家里过夜。镜子里的时间永远比现实慢半拍，那半拍里有东西在看。","politics":"台面上是市府、街道、派出所；台面下有**民俗事务科**——一个挂在档案馆名下、没有正式编制的单位，日常工作是把失踪与意外归到看不见的地方去。再往外是几家民间事务所和一群收钱办事的术者，谁都不服谁，谁也不敢真把事捅到网上。","economy":"人民币。事务所按次收费，几千到几万，收现钱的多，开发票的少。纸扎、香烛、檀香、老物件有专门的批发市场，一条街旺了三十年，谁都不知道老板姓什么。老城的术者收钱也收「代价」，两笔单。","religion":"没有统一信仰。河西人拜城隍与土地，初一十五上香；河东人什么都不信，但会在门口贴一张来历不明的红纸。庙里有真东西，但没有人肯承认——承认了，就要解释为什么不报官。","laws":"明面上没有一条关于灵异的法规，一切按失踪与意外处理。民俗事务科内部有纪律：不许对活人承认，不许记录「无法归类」的部分，不许单独行动。行业里另有一条不成文的规矩：不接熟人的单。","customs":"老城的规矩多得像雨：夜里有人叫你名字，不回头、不答应；进楼不数十三层（那栋楼就没有十三层）；捡到的钱要当天用掉，不能进钱包；剪下的指甲与头发不能丢在别人家门口；白事吃饭时碗不能推；接过别人递的火，先说一句谢。","timeline":"1968 年：老城扩建，阴渠被封。当时的施工记录里少了一份竣工图\n1993 年：河西纺织厂事故，官方数字是三十七人失踪；档案里没有照片\n2007 年：地铁三号线为避让「地质异常」改线，多花了九千万\n2018 年：棚改启动，三年后停摆，说法是资金问题\n今秋：棚改重启，同时老城开始出现「顶替」","conflict":"拆迁队的挖掘机已经挖到了阴渠的顶盖。城市要把旧层铲平，而压在下面的东西正顺着裂缝往上走。有人知道这件事——并且在帮它们。棚改公告上的落款时间，比实际公告早了整整一天。","mystery":"那三十七份失踪档案里没有一张照片，全是同一个笔迹填的。\n你姐姐的死亡证明上，签字的那个人在所有户籍系统里都不存在。\n你事务所的钥匙串上有一把钥匙，打不开这栋楼里的任何一扇门。\n公告上的时间早了一天——那一夜谁在工地上签的字？","factions":[{"name":"民俗事务科","stance":"半官方，守旧","goal":"把事捂住、把线画住，只要能压住就绝不主动处理","relation":"能给你权限，也能立刻收回去"},{"name":"河西帮","stance":"地头蛇","goal":"在拆迁里捞最后一笔，顺带做灵异生意——他们不专业，但他们什么都有","relation":"敌人的敌人，价钱谈得拢"},{"name":"纸扎铺","stance":"中立，古老","goal":"守住河西那条街不拆，别的都不问","relation":"最可靠的情报与器物来源，代价是替他们跑腿"},{"name":"他们","stance":"另一边","goal":"让阴渠里的东西上岸，理由不为人知——也许并没有理由","relation":"幕后，不在明处，也不止一个人"}],"places":[{"name":"河西老城","desc":"棚改停摆八年的废墟。窗户被红漆画了「拆」字，有些字是新刷的，可这一片三个月没人来过。"},{"name":"阴渠入口","desc":"纺织厂锅炉房后面的一个检修口，井盖上焊了一圈别人后来加的钢筋。撬开它的人用了两种工具。"},{"name":"城隍庙","desc":"香火很旺，庙祝每天说三次「我不知道」。神像底座后面有一道暗门，钥匙挂在庙祝腰上。"},{"name":"三号线文化宫站","desc":"末班车 23:14 之后停运。站台尽头有一面被水泥封住的墙，墙后面还有一条轨道。"},{"name":"姑妈的事务所","desc":"老居民楼一楼，门牌是手写的。屋里墙上贴着一张很大的地图，标了四十多个名字，其中有六个被划掉了。"}],"npcs":[{"name":"沈秋姨","role":"纸扎铺老板娘，六十七岁","motive":"她守的不是铺子，是街口那道规矩；她等的人三十年前就该来了","relation":"愿意帮主角，但每次都要他先替她做一件事"},{"name":"程默","role":"民俗事务科最年轻的科员，二十六岁","motive":"他相信所有事都有解释，所以他绝不会承认自己看见过什么","relation":"一开始是阻力，后来是唯一能给他盖章的人"},{"name":"陈望","role":"河西帮的小头目","motive":"他弟弟三年前失踪，名字在那张地图上，是被划掉的那六个之一","relation":"主角最可能的临时搭档，也最可能背后捅刀"},{"name":"顾遥的姐姐","role":"档案上是「已故」","motive":"未知——但她每年生日都会有一笔小额汇款打进姑妈的账户","relation":"主角接下这一切的起点"}],"style":"志怪传奇（笔记体）","scale":"成人向剧情","person":"第三人称限定","focus":"解谜与线索推演","charName":"顾遥","role2":"接手了姑妈留下的灵异事务所","look":"二十七八岁，常穿深色外套；左手腕上戴着一块走慢了半拍的表，从来没去修。","persona":"理性、较真、不信邪；但从不关灯睡觉，也从不照镜子超过三秒。","back":"你在河东一家公司做了五年的数据工作，日子过得标准得像报表。姑妈失踪的第七天，你收到一个快递：一串钥匙、一本账簿、一张写着「别找我」的便条。你辞了职，搬到河西，把这间事务所重新开了张——你告诉自己这只是一个空房子和一堆欠账。","goal":"明面目标：查清姑妈去了哪里。真实渴望：确认姐姐那一天到底发生了什么。","secret":"你从十岁起就能看见别人看不见的东西，你花了十七年说服自己那是错觉。","opening":"你在事务所整理账簿到很晚，屋里只开了台灯。手机响了，屏幕上显示的号码是你自己的。你盯着它看了六秒，接了起来。听筒里没有说话声，只有一个很轻的、规律的敲击——像有人在用手指，从里面敲玻璃。","equip":"随身：姑妈的账簿 — 后三十页的字迹不是她的\n随身：走慢半拍的表 — 姑妈留下的\n工具：一盒朱砂、三张符、一把钥匙打不开的钥匙","skills":"档案与数据检索：4\n观察与推理：4\n与人交涉：3\n符与规矩：1（刚学）","items":"事务所钥匙串（七把）\n姑妈的便条\n朱砂 ×1 盒\n现金 8000 元","clues":"账簿上多出来的三十页，记的都是「没接的单」\n姐姐的死亡证明签字人查不到户籍\n公告上的日期早了一天","rules":"· **规矩就是力量**：不要写「主角运起法力」。所有化解手段都要落在民俗禁忌、礼数、时辰、称呼、器物上，而且必须写清楚为什么这么办。\n· **代价要落实**：每一次借力都要付账，账单要在后续回合里真的出现，不能只喊一句就过去。\n· 恐怖感来自**秩序被轻微破坏**，不是血浆。电表多转的数字、相册里少掉的一个人、楼道里多出来的一双鞋——这些东西比鬼脸可怕。\n· 阴渠里的东西**不要给出完整解释**。可以知道它做什么、怕什么，但不要揭开它是什么。\n· 世界是沙盒：拆迁、欠账、街道办、单位食堂，这些日常才是主角要面对的常态。","bans":"· 不要出现可以修炼的法术体系、不要有「妖怪门派」这类设定。\n· 不要让任何人（包括主角）对「灵异」这件事公开承认并上新闻。\n· 不要用「其实全是幻觉/精神疾病」收场，也不要给阴渠一个科学解释。","canon":"· 民俗禁忌在这座城市里是**硬规则**，写下、说出、做对，就真的管用。\n· 被顶替的人不会自己说破；他们甚至不知道自己被顶替了。\n· 镜子里的时间永远慢半拍，这半拍无法被消除，只能被利用。\n· 死者的东西不能在自己家里过夜——过夜的第二晚开始，家里会多出一个人的习惯。\n· 民俗事务科存在，但不承认自己存在；它的所有档案只有纸质一份。\n· 阴渠在 1968 年就被封过一次，封它的人留下的竣工图缺失——这不是疏漏。"},{"name":"🕯 克苏鲁 · 雾中灯塔","title":"雾中灯塔","tagline":"灯塔已经六十三天没有亮过了","era":"1923 年，美国禁酒令时期。汽车与电话开始普及，城市有电，偏远小镇仍靠煤油灯。收音机是新鲜玩意儿，报纸上的新闻比事实晚三天。一战刚过去五年，很多人的睡眠还没回来。","geo":"新英格兰海岸，因斯茅斯镇。地形崎岖，常年浓雾，一年里有二百天看不见海平线。镇子只有一条主街、一个码头、一座教堂和一座灯塔。离镇七英里的公路在两处塌方，其中一处塌了很久，没人来修。","races":"名义上只有人类——但镇上有相当一部分居民的面容「说不清哪里不对」。他们自己也不觉得有什么不对。","threat":"危险不在明处，也不用数值衡量：\n· 镇上的人——他们不敌视外乡人，他们只是从不打算让你走\n· 那扇门——锁是从里面装上的，这件事本身比门后面有什么更值得追\n· 海——夜里退潮时，滩上会出现一些不该被冲到岸上的东西\n· 你自己的记忆——你笔记本上的字迹有时不像你的\n· 时间——镇上的日历和报纸日期对不上，差了六天；没有人愿意讨论这件事","power":"没有任何超自然力量可供人使用。存在的只有**接触**——与不可名状之物接触会不可逆地磨损理智。你不获得力量，你只失去清醒。","powerRank":"无知 → 知晓 → 触及 → 沉沦。没有回头路，也没有返回上一档的办法。","powerCost":"每亲眼目睹一次不可名状之物，永久损失理智。理智低于 20 时开始出现幻觉，低于 0 时角色失控。逃避、酒精与睡眠可以暂时压制，但压制不等于恢复。","powerLaw":"理智损失不可恢复；已看到的东西无法从记忆里删除；死者不会回来；雾不会散——但它偶尔会退，退的时候你要小心。","politics":"镇政由镇长与渔业公会会长共同把持，实际上是同一个家族。镇长的办公室挂着全家福，照片上少了两个人，相框没换。镇长对外界的一切调查都极度抵触，却会为你安排最好的房间。","economy":"美元。镇上几乎不流通现金，多用记账——你在杂货店的欠账，店主人会在本子上记一笔，那个本子很厚。渔民以渔获换取生活物资，冬天的鱼能换到的东西比夏天少一半。","religion":"表面上是公理会教堂，礼拜出席率却是全州最高。地下室有一扇上了锁的门，钥匙在镇长手里；地板下面有第二层地板。","laws":"州法照常，但镇上从不报警。任何试图离开镇子的人都会「恰好」错过最后一班车、恰好在雾里走回原处。镇上有条不成文的规矩：天黑之后，不要在近海的那条街上停留。","customs":"居民见面微笑但不多话。问及出海细节时一律含糊其辞。夜里九点后街上无人。忌讳谈论灯塔的前任守塔人。他们从不说「海」，只说「外面」；不说「死」，只说「走了」。","timeline":"1923 年 4 月：灯塔守塔人巴顿上任\n1923 年 5 月：灯塔最后一次点亮\n1923 年 6 月：巴顿失踪，警方未立案\n1923 年 7 月：镇上连续四人辞去工作，其中三人次日又回到原来的岗位\n1923 年 8 月：主角抵达因斯茅斯","conflict":"镇上的人并不是在掩盖一桩谋杀——他们在等待某件「每七十年发生一次」的事。他们不知道具体是什么，只知道该准备什么：船、盐、灯油，以及一个外人。","mystery":"灯塔熄灭不是事故——是有人主动熄灭的。\n教堂地下室的门，锁是从里面装上的。\n巴顿的日记只剩十一页，缺的页码被整齐撕掉，撕口很平。\n镇上的日历与报纸的日期差了六天。\n你的委托人给的地址，在镇上的门牌里不存在，但那栋房子门窗完好、炉子里还有余温。","factions":[{"name":"马什家族","stance":"封闭","goal":"守住海湾里的秘密，阻止任何外来者靠近灯塔","relation":"表面配合，暗中阻挠，从不直接动手"},{"name":"阿卡姆调查局","stance":"理性","goal":"弄清这一带接连发生的失踪案真相，写一份能交上去的报告","relation":"主角的委托人来自这里——而他们隐瞒了一样东西"},{"name":"镇上的女人","stance":"沉默","goal":"她们知道得比男人多，但她们的丈夫在渔船上；她们不会说，只会「恰好」把某扇门开着","relation":"唯一可能帮主角的人，前提是他不追问"},{"name":"渔业公会","stance":"贪婪","goal":"保住渔汛，无论海里的东西要什么作为代价","relation":"会为了钱出卖任何人，包括镇长的秘密"}],"places":[{"name":"因斯茅斯灯塔","desc":"建在离岸的礁石上，退潮时的石堤可以走人。前任守塔人巴顿失踪已两个月，塔里的煤油罐是满的。"},{"name":"镇务厅","desc":"一栋两层的石砌建筑，档案室在二楼，镇长亲自掌钥匙。一楼的登记簿上，今年的迁入记录只写了主角一个名字。"},{"name":"公理会教堂","desc":"礼拜出席率全州最高。地下室的门是从里面装上的锁；管风琴有一根管子不响，莉迪亚从不去修它。"},{"name":"七英里路","desc":"通往外界的唯一一条路，两处塌方。其中一处的塌方痕迹是新的，土被翻过。"},{"name":"老码头","desc":"镇西，已经不用了。木桩上刻满了记号，不是潮位线——每七十年会加深一遍，最新的一批刻得很浅。"}],"npcs":[{"name":"以斯拉·马什","role":"镇长","motive":"他不是不知道真相，他是知情者之一，正在等「那一刻」到来","relation":"表面礼貌，实际监视主角，会主动提供假线索"},{"name":"莉迪亚","role":"教堂管风琴手","motive":"想带妹妹离开镇子，但没有勇气独自行动","relation":"可能成为盟友——只要主角不试图从她这里问出「海」的事"},{"name":"老船匠赫伯","role":"镇上唯一还在造船的人","motive":"他造了一艘不该造的船，船身比他的工坊还长","relation":"话最多的人，也是最危险的信息来源——他说的每句话都是真的，只是顺序不对"},{"name":"巴顿","role":"失踪的守塔人","motive":"未知。他的日记停在第十一页，那一页写着：如果不亮灯，它会上来；如果亮灯，它就知道这里有人。","relation":"全案的起点，也可能根本不是受害者"}],"style":"冷硬简练","scale":"成人向剧情","person":"第三人称限定","focus":"解谜与线索推演","role2":"受雇的私家调查员","look":"四十岁上下，风衣，左手小指缺了一节，随身带着酒壶与一本写满字的皮面笔记","persona":"冷静、多疑、习惯性记录一切，但内心深处已经厌倦了恐惧","back":"你在一战战场上失去了大部分同伴和自己的小指。你不再相信任何宏大的东西，只做付得起钱的活。这一次委托人给的钱多得不正常——足够你两年不出门。合约上有一行小字：无论发现什么，不要报警。","goal":"明面目标：找到巴顿，或者找到他失踪的合理解释。真实渴望：想亲眼看看「无法被解释」的东西是否真的存在。","secret":"你在战壕里见过一次不该存在的东西，从此再也没有睡过一个完整的觉。","opening":"码头的雾浓得像棉絮。摆渡老头把你放在栈桥上，一句话没说就掉头离开。你回头时，那只船已经彻底消失在雾里。栈桥尽头有一个人在等你，手里提着一盏没点的煤油灯，看见你就笑了：「您就是那位先生吧。镇上好久没来过外人了。」","equip":"武器：柯尔特左轮 — 六发\n工具：手电筒 — 电池还剩大半\n随身：皮面笔记本与钢笔","skills":"侦查：4\n射击：3\n医学常识：2\n心理学：2","items":"威士忌（半瓶）\n巴顿的档案复印件\n委托人的介绍信\n弹药 ×12","clues":"灯塔的钥匙不在守塔人身上\n镇上日历与报纸差了六天\n介绍信上的地址在镇上不存在，房子却有人住过","rules":"· **恐怖来自未知与秩序被破坏**，不来自怪物出场。能不描写就不描写，让「不对」的部分留在主角的余光里。\n· 这是**调查**故事：线索要公平地给出来，玩家能靠推理逼近真相；但真相永远只能逼近，不能抵达。\n· 理智（精神值）是这场游戏的核心资源。每次目睹不可名状之物，都要明确扣减，并描写它的后果。\n· 镇上的人不是怪物，他们有生活、有渔汛、有欠账。他们的可怕之处在于**一切如常**。\n· 世界是沙盒：主角可以查案，也可以修船、喝酒、钓鱼、搭讪；镇上不会因为他不动就停下来。","bans":"· **不要给出解释**。任何「原来是这样」的揭底都是错的，包括用科学、宗教或生物学的解释。\n· 不要让任何力量可以被主角掌握、修炼或使用。\n· 不要写成「打倒怪物」的冒险，也不要让镇上的人变成明确的反派。\n· 不要用现代词汇与网络语感，这是 1923 年。","canon":"· 理智损失不可恢复，任何「治愈」都是暂时压制。\n· 已看到的东西无法从记忆中删除。\n· 死者不会回来。\n· 雾不会散；它会退，退了之后滩上会多出东西。\n· 那件「每七十年发生一次」的事，镇上人只知其然，不知其所以然——包括镇长。\n· 灯塔熄灭是主动的：上一次亮灯与这一次熄灭，出自同一个理由。"},{"name":"☢ 末日 · 灰烬公路","title":"灰烬公路","tagline":"把货送到北岭，别问货是什么","era":"大崩坏后第 17 年。工业文明残余：能修复的机械比新造的更值钱，识字的比会开枪的少。燃油极度稀有，主流是脚踏车与骡马。夜里多数聚落不敢开灯——灯会招来人和别的东西。","geo":"旧大陆中部。公路网大多断裂，幸存者聚落沿旧国道分布，彼此隔着半天的路程。北岭是全境唯一还有电力的聚落，三万人，靠一座修复的水电站活着。之外的地方，太阳一落就回到十七世纪。","races":"仅人类。按聚落归属划分身份：**定居民**（有围墙和配给）、**公路人**（在路上讨生活，被两边都不完全信任）、**拾荒者**（在废墟里挖旧世界的东西，活不长）。","threat":"· 辐射——看不见，累积不可逆，最公平的杀手\n· 感染——抗生素早在第十年就断了，一颗生锈的铁钉能要人的命\n· 公路兄弟会——劫掠者，但他们的规矩很严：只抢货不杀人，除非你先动手\n· 野兽与变异体——越靠近旧核区越多，形态越不像原来的物种\n· 别人——十七年里，死于同类的人比死于辐射的人多得多","power":"没有超自然力量。真正的「力量」是辐射耐受度、旧时代的技术知识、以及子弹。会修发电机的人在任何一个聚落都能吃饱饭。","powerRank":"无排位制。按聚落的说法：能活过三十岁算「硬骨头」，能带车队走完旧国道全线的人叫「路熟」。","powerCost":"辐射累积不可逆，只能减缓；抗生素极度稀缺，一次感染可能致命；子弹打一发少一发，而造一颗新子弹需要整个工业体系。","powerLaw":"没有超自然现象，任何看起来「神奇」的东西都有可解释的技术来源；辐射伤害不可治愈，只能减缓；旧世界的资料不完整，保存下来的每一张图纸都比人命值钱。","politics":"北岭议会控制电力与净水，实质统治全境：谁交不出配额，谁就被从供电表上划掉。各聚落自治，但粮食与药品依赖北岭的配给，所以自治只是名义上的。议会有十二个席位，其中四个已经连任十七年。","economy":"以**弹药、净水片、电池、汽油**为硬通货，纸币无用。一顿饱饭 = 2 发子弹；一夜带床的房 = 1 片净水片；一头骡子 = 200 发子弹。稀缺的东西不用谈价，能换到就是运气。","religion":"多数人怀念旧世界但不信神。「守灯人」是少数教派，相信北岭的发电机是圣物，每月的「点灯日」要围着水电站唱歌。他们不狂热，他们只是需要一个能跪下去的地方。","laws":"公路上的规矩比任何法律都硬：不抢同路人，不杀医者，不问货，不弃伤。违背者会被所有聚落拒之门外，而在这条路上被拒之门外，等于判了死刑。","customs":"见面先出示双手（表示没有拿武器）。交易时先谈水，再谈货。离开聚落前必须自己修好用过的东西。夜里交谈要压低声音——不是怕吵，是怕被听见。孩子满十二岁那天要独自走一趟公路，走回来才算成年人。","timeline":"崩坏第 0 年：大崩坏，具体起因至今没有公认说法\n第 4 年：第一次大迁徙，九成人死亡\n第 11 年：北岭水电站修复，电力恢复，配给制开始\n第 15 年：公路兄弟会成立，第一条公路规矩被刻在路碑上\n第 17 年：故事开始","conflict":"北岭的燃料储备只剩不到一年——这个消息还只在议会内部。有人正在走私一台能重建整条电网的旧时代机组，所有势力都想要它，而它在路上。","mystery":"主角要运的「货」是一只密封箱，重量不对——太轻了。\n公路兄弟会内部有人给北岭通风报信，而且知道路线。\n老陈的右手是机械义肢，那种型号只在大崩坏前生产过。\n公告板上有一张委托的纸比别的纸新，字迹是同一支笔写的，但墨已经干了很久。","factions":[{"name":"北岭议会","stance":"秩序","goal":"维持电力垄断，防止其他聚落获得技术；内部有人已经在为「燃料见底」做打算","relation":"名义上的雇主"},{"name":"公路兄弟会","stance":"劫掠","goal":"截断北岭的补给线，迫使其分享电力技术","relation":"主角的直接威胁，但他们的规矩可以谈"},{"name":"守灯人","stance":"信仰","goal":"保护水电站不被任何势力染指，包括北岭议会","relation":"唯一的中间人，愿意为车队提供落脚点"},{"name":"拾荒队","stance":"游离","goal":"挖出旧世界的物资换命；他们知道旧核区里有什么，但从不细说","relation":"最可靠的路况情报来源"}],"places":[{"name":"旧国道 7 号","desc":"全境最完整的公路残段，也是抢劫最频繁的地段。路碑上刻着公路规矩，最新的一条是去年加上去的。"},{"name":"北岭","desc":"建在旧水电站上的聚落，三万人，是文明仅存的火种。城墙用的是旧世界的预制板，东段修过三次。"},{"name":"灰石驿站","desc":"旧加油站改的落脚点，老板是个不识字的老人，靠墙上一百多道刻痕记路过的车队。"},{"name":"旧核区边缘","desc":"地图上画着叉的地方。从外面看只是普通的郊区，走进去两小时就开始头疼，再往后会有别的东西跟着你。"}],"npcs":[{"name":"老陈","role":"北岭议会派来的接头人","motive":"他自己也不知道货是什么，但他知道这趟活必须成功——他的女儿在北岭的配给表上","relation":"雇主代表，会为了任务说谎"},{"name":"提灯","role":"公路兄弟会的斥候","motive":"想脱离兄弟会但不敢，正在寻找一个足够强的靠山","relation":"潜在的双面人，主角的每一次选择都在推他"},{"name":"赫伯的老婆子","role":"灰石驿站的老板娘","motive":"她在这条路上见过太多车队，她只想知道谁还活着","relation":"情报，代价是一顿饭和一句实话"},{"name":"小满","role":"十三岁，跟着车队打杂","motive":"她想成为公路人，但还没走过她的那趟十二岁公路","relation":"主角的跟班，也是这条路上最容易死的人"}],"style":"冷硬简练","scale":"成人向剧情","person":"第三人称限定","focus":"环境与感官","role2":"公路运输者","look":"三十来岁，皮肤被风沙磨得粗糙，右手背有一道辐射灼伤的旧疤，脖子后挂着一枚用弹壳磨成的挂坠","persona":"极简、不讲废话、对承诺近乎偏执；从不在别人面前喝水","back":"你出生在崩坏后的第九年，没见过旧世界。你靠跑公路为生，十七年里送出过三十七趟货，没有一次失信——你说不清这是职业操守还是某种病态的执念。你的父亲死在第十二年的一趟活上，尸首没带回来，货送到了。","goal":"明面目标：把这趟货送到北岭。真实渴望：想知道旧世界的人是怎么活的。","secret":"你的辐射累积值已经接近危险线，你没告诉任何人——包括你自己，你一直在往本子上记更少的数。","opening":"日头偏西，旧国道 7 号的路面裂得像干涸的河床。你在路碑旁停下喝水，从水囊的倒影里看见身后三百米处，有三个人正推着车朝你过来——他们没有举双手。","equip":"武器：旧猎枪 — 膛线磨损，超过五十步没准头\n载具：改装脚踏车 — 后架加固过\n防护：防尘面罩","skills":"公路生存：4\n射击：3\n机械维修：3\n识人：3","items":"密封箱（货，不可打开）\n罐头 ×3\n旧地图残页\n子弹 ×14\n净水片 ×6","clues":"箱子比看起来轻得多\n老陈的义肢型号与崩坏前军用型号一致","rules":"· **物资就是叙事**：每一发子弹、每一片净水片都要记账，用掉就少了，用完就得想办法。\n· 没有超自然力量，任何看起来神奇的东西都要有可解释的技术来源。\n· 文明的残骸要写得具体：一台能用的收音机、一本识字课本、一枚旧硬币，都比抽象描述动人。\n· 人比怪更危险。死于同类的比例要一直高于死于辐射的比例。\n· 世界是沙盒：可以跑公路，也可以留在某个聚落种地、修水管、跟人吵架；各地的日子照旧。","canon":"· 辐射伤害不可治愈，只能减缓；累积值只升不降。\n· 抗生素在崩坏第十年后就断了，能用的只有草药与烈酒。\n· 北岭的发电机是整个地区唯一在运转的旧世界机组，没有第二台。\n· 公路规矩刻在旧国道 7 号的路碑上，违反者被所有聚落拒之门外——这条规矩真的被执行过，不止一次。\n· 崩坏的起因至今没有公认说法；所有自称知道真相的人，都拿不出证据。"},{"name":"🌸 校园 · 毕业前那年夏天","title":"毕业前的那年夏天","tagline":"有些话，过了这个夏天就再也说不出口了","era":"当代。智能手机与社交媒体普及，但这个小城里人们更习惯面对面说话。房价不高也不低，年轻人一半在准备离开。校门口的麻辣烫涨了两块钱，老板说房租涨了。","geo":"临海市，一个人口三十万的普通地级市，靠海，风大。第七中学有六十年历史，旧教学楼保留着八十年代的建筑风格：水磨石楼梯、绿漆墙裙、窗户关不严。三层最东头有一间废弃的音乐教室，钥匙不知道在谁手里，但门从来没锁过。","races":"仅人类。学生按成绩、社团、座位、初中校友分成很多小圈子，圈子的边界比成年人想象的清楚得多。","threat":"这所学校没有真正的危险，只有会过去的事：\n· 模拟考排名表——它决定谁被叫去办公室，谁被换座位\n· 社团解散通知——贴在公告栏角落，过一个星期就没人看了\n· 家庭电话——每次响起，都是要你回一趟家\n· 时间——毕业倒计时挂在黑板上，每天减一，没有人为它做点什么","power":"没有特殊能力。推动故事的是模拟考排名、社团存亡、家庭期望和暗恋。真正稀缺的资源只有一个：**别人的注意力**。","powerRank":"年级排名表。前五名在教师办公室有专属位置；后十名有专属的家长会。","powerCost":"熬夜学习消耗体力与心情；说出去的谎需要更多谎言维持；错过的时机不会再来，而且它不会告诉你是哪一个时机。","powerLaw":"没有超自然现象；没有穿越或重生；所有误会必须靠沟通或时间解决，不能靠巧合；所有人都只有一次高三。","politics":"学生会主席由投票产生，实际影响力来自班主任与年级组。社团经费按升学率分配，「旧音乐社」这类名字排在名单最后。教务处的态度很简单：不要出事。","economy":"人民币。食堂一顿午饭 12 元，一张 CD 45 元，天台的快乐水 3 元。学生的主要资产是人情、时间和一张已经用旧的公交卡。","religion":"无人信教。但全校都相信「三楼音乐教室闹鬼」这个说法——半夜会有人推钢琴，声音能传到二楼。后来证实是风声，但说法没散。","laws":"校规：不许在走廊奔跑；晚自习必须留在教室；手机在课上必须关机；违反三次请家长。真正的法律是那条不成文的：不要在别人的背后说话，因为走廊有回声。","customs":"见面叫全名或绰号，正经叫全名是要吵架的前兆。给喜欢的人带早餐是公开的示好。毕业前送第二颗纽扣的习俗已经没人当真了，但每年都有人偷偷留着。三个人的小组永远会有一个觉得多余。","timeline":"九月初：主角转入第七中学\n十月中：模拟考第一次排名\n次年三月：艺考报名截止\n次年四月：社团年审，决定是否解散\n次年六月：毕业典礼","conflict":"旧音乐社只剩一名成员，按校规将在学期末解散——除非它能凑够三个人并完成一次公开演出。而愿意加入的三个人，各有各的理由不加入。","mystery":"周晓白弹的那首曲子，主角在很小的时候听过。\n音乐教室的柜子里有一本 1998 年的社团名册，上面有二十七个名字。\n周晓白的姐姐其实是七中的学生，八年前在这里出过事——学校档案里查不到，但旧教学楼三层的照片墙上少了一张。\n那首曲子的谱子，最后一页永远是空的。","factions":[{"name":"学生会","stance":"规矩","goal":"保住社团经费，让毕业典礼办得体面","relation":"主角是被纳入观察的转学生"},{"name":"旧音乐社","stance":"游离","goal":"在社团解散前完成一首曲子","relation":"主角意外闯入的圈子，只有一个成员"},{"name":"高三（七）班","stance":"各自为战","goal":"活下去，考出去","relation":"主角的班级，安静得能听见钟声"},{"name":"家长群","stance":"旁听","goal":"让孩子的每一分钟都有去处","relation":"看不见，但每一次响动都会传到主角耳朵里"}],"places":[{"name":"旧音乐教室","desc":"教学楼三楼最东头，钢琴走音，窗户关不严，是全校唯一的禁地。门从来没锁过。"},{"name":"天台","desc":"需要从五楼器材室的窗户翻出去。能看见整个操场和远处的海。栏杆上刻着历年留下来的名字。"},{"name":"食堂二楼靠窗","desc":"中午十二点二十分以后没人抢的位置。周晓白每天都在那里，一个人，吃得很慢。"},{"name":"海堤","desc":"离学校步行二十分钟。傍晚风大，适合说一些在走廊里说不出口的话。"}],"npcs":[{"name":"周晓白","role":"旧音乐社仅剩的成员","motive":"想完成已故姐姐没写完的那首曲子，但不敢告诉任何人","relation":"对主角既警惕又期待"},{"name":"林老师","role":"班主任","motive":"真心想帮学生，但被升学指标压得快撑不住了","relation":"对主角格外关注，也在偷偷替音乐社争取"},{"name":"郑黎","role":"学生会副主席，年级第二","motive":"她要保住保送名额，为此不能在任何表格上出现污点","relation":"主角的对手，但不是坏人"},{"name":"小柯","role":"同班的男生，嘴很碎","motive":"他其实什么都看得出来，只是不说 —— 他靠说废话让自己不被注意","relation":"全剧最容易忽略、也最关键的人"}],"style":"轻小说口语","scale":"全年龄","person":"第三人称限定","focus":"人物对话与心理","role2":"高二转学生","look":"十七岁，校服外套总是比别人大一码，习惯低着头走路，书包侧袋永远插着一瓶水","persona":"礼貌但疏离，习惯用玩笑掩饰认真；从不主动问别人的事","back":"你因为父亲工作调动转过五次学，最长的一次待了一年半。你学会了提前记住每一个人的名字，好在离开的时候不必道别。这一次你决定不再和任何人建立关系——反正迟早要走。你在新学校做的第一件事，是找到了一个没人去的地方。","goal":"明面目标：平稳地度过这一年。真实渴望：有一个可以被称为「留下」的地方，以及一个不必走的人。","secret":"你其实会弹钢琴，但已经五年没碰过了——上一次是在母亲的葬礼上。","opening":"开学第二周的午休，你为了躲开走廊里的喧闹，推开了旧音乐教室的门。钢琴前坐着一个人，背对着你，正弹一段你没听过、却莫名熟悉的旋律。她停下，没有回头：「门在那边。你挡着光了。」","equip":"随身：随身听 — 电池快没电了\n随身：旧 CD 一张，封面磨损\n随身：公交卡，已经刷得很旧","skills":"钢琴：3（荒废已久）\n观察力：4\n考试技巧：3","items":"学生证\n写了一半的转学申请\n母亲塞的胃药","clues":"那段旋律你在五岁那年听过\n音乐教室的柜子里有一本 1998 年的社团名册\n照片墙上少了一张三层的合影","rules":"· 这不是悬疑故事：所有「谜」最终都要落到人与人的关系上，不要写成灵异事件。\n· 日常要有质感：早读、月考、走廊里的回声、食堂的菜、下雨天湿掉的球鞋。细节比情节重要。\n· **每个同学都是完整的人**：他们有家庭、有压力、有说不出口的事，不要把他们写成背景板。\n· 时间要流动：学期、月考、天气，都要真的往前走；不要让故事停在同一天。\n· 世界是沙盒：可以不加入音乐社，可以只顾念书，可以交别的朋友。走哪条路都成立，代价也都要如实写出来。","canon":"· 没有超自然现象，也没有穿越与重生。\n· 所有误会必须靠沟通或时间解决，不能靠巧合化解。\n· 所有人都只有一次高三，错过的事不会回来补。\n· 旧音乐社确实只剩一名成员，学校的解散流程正在走。\n· 那首曲子确实没有写完——最后一页是空的，不是丢了。"},{"name":"✎ 空白（完全自定义）","style":"现代白话（通用）"}];
+
+function addCodex(b, kind, name, body, keys, always) {
+  if (!clean(body) && !clean(name)) return;
+  b.codex.push({ id: uid(), kind: kind, name: clean(name), keys: arr(keys), body: clean(body), always: !!always });
+}
+function presetToBook(p) {
+  const b = newBook();
+  p = p || {};
+  b.title = clean(p.bookTitle || p.title) || '未命名';
+  const w = b.world;
+  w.title = clean(p.title); w.tagline = clean(p.tagline); w.era = clean(p.era);
+  w.geo = clean(p.geo); w.races = clean(p.races); w.daily = clean(p.customs);
+  w.power = clean(p.power); w.powerRank = clean(p.powerRank);
+  w.powerCost = clean(p.powerCost); w.powerLaw = clean(p.powerLaw);
+  w.rules = clean(p.canon); w.threat = clean(p.threat);
+  if (STYLE_RULES[p.style]) b.narr.style = p.style;
+  if (SCALE_RULES[p.scale]) b.narr.scale = p.scale;
+  if (PERSONS.indexOf(p.person) >= 0) b.narr.person = p.person;
+  if (FOCUSES.indexOf(p.focus) >= 0) b.narr.focus = p.focus;
+  b.narr.rules = clean(p.rules); b.narr.bans = clean(p.bans);
+
+  /* 主角 → 一张常驻人物卡 */
+  const hero = clean(p.charName || p.name);
+  if (hero) {
+    b.cards.push({
+      id: uid(), name: hero, role: clean(p.role2 || p.role), look: clean(p.look),
+      persona: clean(p.persona), back: clean(p.back), goal: clean(p.goal),
+      secret: clean(p.secret), voice: '', always: true,
+    });
+    b.narr.pov = hero;
+    const kit = [clean(p.skills) ? '会的：' + clean(p.skills) : '',
+      clean(p.equip) ? '装备：' + clean(p.equip) : '',
+      clean(p.items) ? '随身：' + clean(p.items) : ''].filter(Boolean).join('\n');
+    addCodex(b, '物品与资源', hero + ' 手上的东西', kit, ['装备', '技能', '物品'], true);
+  }
+  /* 其他人物 → 按需调用的人物卡 */
+  (p.npcs || []).forEach(n => {
+    if (!clean(n.name)) return;
+    b.cards.push({
+      id: uid(), name: clean(n.name), role: clean(n.role), look: '', persona: '',
+      back: clean(n.relation), goal: clean(n.motive), secret: '', voice: '', always: false,
+    });
+  });
+  /* 长尾设定 → 世界书条目 */
+  (p.places || []).forEach(x => addCodex(b, '地理与地点', x.name, x.desc, [], false));
+  (p.factions || []).forEach(f => addCodex(b, '势力与组织', f.name,
+    '立场：' + clean(f.stance) + '\n目标：' + clean(f.goal) + '\n与主角的关系：' + clean(f.relation), [], false));
+  addCodex(b, '规则与力量', '力量体系的等级划分', p.powerRank, ['等级', '境界', '阶'], false);
+  addCodex(b, '规则与力量', '用这份力量要付的代价', p.powerCost, ['代价', '损耗'], false);
+  addCodex(b, '历史与事件', '历史年表', p.timeline, ['历史', '纪年'], false);
+  addCodex(b, '历史与事件', '当下正在发生的事', p.conflict, ['局势', '矛盾'], false);
+  addCodex(b, '其他', '政治', p.politics, ['政体', '权力'], false);
+  addCodex(b, '其他', '经济与货币', p.economy, ['物价', '币值', '钱', '买'], false);
+  addCodex(b, '其他', '宗教与信仰', p.religion, ['教会', '神', '祷告'], false);
+  addCodex(b, '其他', '法律与习俗', p.laws, ['禁忌', '规矩'], false);
+  addCodex(b, '其他', '日常常识与称谓', p.customs, ['称呼', '礼节', '历法'], false);
+  addCodex(b, '其他', '未解之谜与伏笔', p.mystery, ['谜团', '真相'], false);
+  addCodex(b, '其他', '主角身上的线索', p.clues, ['线索'], false);
+
+  /* 开局：一条 beat */
+  b.chapters.push({ id: uid(), title: '第一章', beats: [{ id: uid(), text: clean(p.opening), state: '' }] });
+  b.cursor = { chapterId: b.chapters[0].id, beatId: b.chapters[0].beats[0].id };
+  return b;
+}
+function applyPreset(p) {
+  if (!window.confirm('加载预设「' + p.name + '」？\n\n现在的正文、大纲、世界书与人物卡都会被替换。想在手里先留一份，就到菜单里导出全书备份。')) return;
+  BOOK = presetToBook(p);
+  save(); renderAll(); show('board');
+  toast('已加载：' + p.name);
+}
+function openPreset() {
+  const lines = PRESETS.map((p, i) => '<div class="card" style="margin-top:10px">'
+    + '<div class="row"><b class="grow">' + esc(p.name || ('预设 ' + i)) + '</b>'
+    + '<button class="btn sm pri" data-pre="' + i + '">用这套</button></div>'
+    + '<div class="mut" style="margin-top:6px">' + esc(clean(p.tagline)) + '</div>'
+    + '<div class="mut">' + esc([clean(p.charName || p.name) ? '主角：' + clean(p.charName || p.name) : '',
+        arr(p.npcs).length ? '人物 ' + arr(p.npcs).length : '', arr(p.places).length ? '地点 ' + arr(p.places).length : '',
+        arr(p.factions).length ? '势力 ' + arr(p.factions).length : '', clean(p.style) || ''].filter(Boolean).join(' · ')) + '</div>'
+    + '</div>').join('');
+  openSheet('<button class="close" data-x="1">✕</button><h3>✧ 换预设开局</h3>'
+    + '<div class="mut" style="margin-top:6px">世界核心、世界书条目、人物卡、开局 beat 都是现成的。'
+    + '世界书里的条目默认「按需调用」，不会每段都占 token。</div>'
+    + (lines || '<div class="empty">没有内置预设</div>'));
+  $('#sheetPanel').onclick = ev => {
+    const el = ev.target.closest('[data-x],[data-pre]'); if (!el) return;
+    if (el.dataset.x === '1') return closeSheet();
+    if (el.dataset.pre != null && el.dataset.pre !== '') { const p = PRESETS[+el.dataset.pre]; closeSheet(); applyPreset(p); }
+  };
+}
+
+function newBook() {
+  return {
+    title: '未命名',
+    /* 世界核心：每段都带的那一小块（世界名/标语/时代/地理/种族/力量/硬规则） */
+    world: {
+      title: '', tagline: '', era: '', geo: '', races: '', daily: '',
+      power: '', powerRank: '', powerCost: '', powerLaw: '', rules: '', threat: '',
+    },
+    narr: { person: '第三人称限定', pov: '', style: STYLE_DEFAULT, scale: '成人向剧情', focus: FOCUSES[0], realism: true, bans: '', rules: '' },
+    chapters: [],           // [{id,title,beats:[{id,text,state}]}]  state: '' | cur | done
+    paras: [],              // [{id,beatId,pov,text,state}]         state: 'draft' | 'done'
+    cards: [],              // 人物卡（静态档案）：{id,name,role,look,persona,back,goal,secret,voice,always}
+    codex: [],              // 世界书条目：{id,kind,name,keys[],body,always,from}
+    ledger: { time: '', place: '', pov: '', people: [], threads: [], props: [], summary: '' },
+    god: { truth: '', agenda: [], foreshadow: [], if_inaction: '', hooks: [], risks: [] },
+    dice: { table: DICE_DEFAULT.slice(), last: null, pending: null },
+    facts: [],              // 硬性事实（最高优先级，直接进提示词）
+    dir: { pace: 3, emotion: 2, surprise: 3, theme: '', note: '' },
+    stats: { prompt: 0, completion: 0, cached: 0, calls: 0 },
+    cursor: { chapterId: '', beatId: '' },
+    lastInject: null,       // 上一段实际载入了哪些条目（给作者看的透明度）
+  };
+}
+const CODEX_KINDS = ['地理与地点', '势力与组织', '规则与力量', '物品与资源', '历史与事件', '其他'];
+
+function load(k, d) { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v || d; } catch (e) { return d; } }
+function saveNow() {
+  try { localStorage.setItem(K.book, JSON.stringify(BOOK)); } catch (e) { toast('保存失败：' + e.message); }
+}
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 400); }
+function saveCfg() { try { localStorage.setItem(K.cfg, JSON.stringify(CFG)); } catch (e) {} }
+window.addEventListener('pagehide', () => { clearTimeout(saveTimer); saveNow(); saveCfg(); });
+window.addEventListener('beforeunload', () => { clearTimeout(saveTimer); saveNow(); });
+
+function curChapter() { return BOOK.chapters.filter(c => c.id === BOOK.cursor.chapterId)[0] || BOOK.chapters[0] || null; }
+function curBeat() {
+  const c = curChapter(); if (!c) return null;
+  return (c.beats || []).filter(b => b.id === BOOK.cursor.beatId)[0] || null;
+}
+function curPov() { return clean(BOOK.narr.pov) || clean((BOOK.ledger.people[0] || {}).name) || '主角'; }
+function charCount(s) { return clean(s).replace(/\s/g, '').length; }
+function bookChars() { return BOOK.paras.reduce((n, p) => n + charCount(p.text), 0); }
+
+/* ============================================================================
+   提示词
+   ============================================================================ */
+/* --------------------------------------------------- 世界核心（常驻） */
+function coreText() {
+  const w = BOOK.world || {};
+  const p = [];
+  const push = (k, v) => { if (clean(v)) p.push('- **' + k + '**：' + clean(v)); };
+  push('世界名称', w.title); push('一句话标语', w.tagline); push('时代与技术水平', w.era);
+  push('地理概貌', w.geo); push('种族与物种', w.races); push('日常生活的质感', w.daily);
+  if (clean(w.power) || clean(w.powerRank) || clean(w.powerCost)) {
+    p.push('\n## 力量体系（要点）');
+    push('本质与来源', w.power); push('等级划分', w.powerRank); push('代价与限制', w.powerCost);
+  }
+  if (clean(w.powerLaw)) { p.push('\n## 不可违背的定律'); p.push(clean(w.powerLaw)); }
+  if (clean(w.rules)) { p.push('\n## 硬规则（本作不可违反）'); p.push(clean(w.rules)); }
+  if (clean(w.threat)) { p.push('\n## 威胁谱系'); p.push(clean(w.threat)); }
+  return p.join('\n') || '（作者还没填世界核心）';
+}
+
+/* ============================================================================
+   世界书：按需调用
+   ----------------------------------------------------------------------------
+   不再把整本设定每段都塞进提示词。每次写作前按「当前 beat + 本段视点人物 +
+   最近两段正文 + 骰值」在本地命中条目（0 额外开销）；也可以切到「让 AI 自己挑」，
+   多花一次小请求换命中率。
+   ============================================================================ */
+function haystack() {
+  return [
+    curPov(),
+    clean((curBeat() || {}).text),
+    clean((curChapter() || {}).title),
+    BOOK.paras.slice(-2).map(p => clean(p.text)).join(' '),
+    BOOK.dice.pending ? (clean(BOOK.dice.pending.label) + ' ' + clean(BOOK.dice.pending.desc)) : '',
+    clean(BOOK.narr.rules),
+  ].join(' ');
+}
+function scoreEntry(e, hay) {
+  let s = 0;
+  if (clean(e.name) && hay.indexOf(clean(e.name)) >= 0) s += 3;
+  arr(e.keys).forEach(k => { if (clean(k) && hay.indexOf(clean(k)) >= 0) s += 2; });
+  return s;
+}
+function currentSelection() {
+  const hay = haystack();
+  const picked = BOOK._picked || null;   // {codex:[名字], cards:[名字]}（AI 挑选模式）
+  const allow = (list, name) => !list || list.some(n => clean(n) && (clean(n) === clean(name) || clean(name).indexOf(clean(n)) >= 0));
+  const cap = Math.max(800, +CFG.codexCap || 6000);
+
+  const rank = [];
+  BOOK.codex.forEach(e => {
+    const s = e.always ? 999 : scoreEntry(e, hay);
+    if (!s) return;
+    if (picked && !e.always && !allow(picked.codex, e.name)) return;
+    rank.push({ e: e, s: s, why: e.always ? '常驻' : (picked ? 'AI 选中' : '命中') });
+  });
+  rank.sort((a, b) => b.s - a.s);
+  const codexList = [];
+  let chars = 0;
+  rank.forEach(r => {
+    const len = clean(r.e.name).length + clean(r.e.body).length + 24;
+    if (chars + len > cap && r.s < 999) return;
+    chars += len; codexList.push(r);
+  });
+
+  const pov = curPov();
+  const onStage = (BOOK.ledger.people || []).map(p => clean(p.name));
+  const cardList = [];
+  let cardChars = 0;
+  BOOK.cards.forEach(c => {
+    let s = 0, why = '';
+    if (clean(c.name) === pov) { s = 99; why = '视点人物'; }
+    else if (c.always) { s = 80; why = '常驻'; }
+    else if (clean(c.name) && onStage.indexOf(clean(c.name)) >= 0) { s = 60; why = '上一段在场'; }
+    else if (picked && allow(picked.cards, c.name)) { s = 50; why = 'AI 选中'; }
+    else if (clean(c.name) && hay.indexOf(clean(c.name)) >= 0) { s = 40; why = '被提到'; }
+    if (s) { cardChars += 200; cardList.push({ c: c, s: s, why: why }); }
+  });
+  cardList.sort((a, b) => b.s - a.s);
+
+  return {
+    codexList: codexList, cardList: cardList, chars: chars, cardChars: cardChars,
+    codexText: codexList.map(r => '### [' + (r.e.kind || '其他') + '] ' + clean(r.e.name)
+      + (arr(r.e.keys).length ? '（提到：' + arr(r.e.keys).join('、') + '）' : '') + '\n' + clean(r.e.body)).join('\n\n'),
+    cardText: cardList.map(r => {
+      const c = r.c, f = [];
+      const p = (k, v) => { if (clean(c[v])) f.push('- ' + k + '：' + clean(c[v])); };
+      p('身份', 'role'); p('外貌', 'look'); p('性格', 'persona'); p('背景', 'back');
+      p('想要什么', 'goal'); p('秘密', 'secret'); p('说话方式', 'voice');
+      return '### ' + clean(c.name) + '（' + r.why + '）\n' + f.join('\n');
+    }).join('\n\n'),
+  };
+}
+
+function outlineText() {
+  const out = [];
+  BOOK.chapters.forEach((c, i) => {
+    out.push('### 第' + (i + 1) + '章：' + (clean(c.title) || '（未命名）'));
+    (c.beats || []).forEach((b, j) => {
+      if (!clean(b.text)) return;
+      const mark = b.id === BOOK.cursor.beatId ? '  ←【本段要写这条】' : (b.state === 'done' ? '  （已写）' : '');
+      out.push((j + 1) + '. ' + clean(b.text) + mark);
+    });
+  });
+  return out.length ? out.join('\n') : '（作者还没给大纲，请写得更保守：只延续上文的自然走向，不要制造新事件。）';
+}
+
+function ledgerText() {
+  const l = BOOK.ledger;
+  const o = { time: l.time, place: l.place, pov: BOOK.narr.pov || l.pov, people: l.people, threads: l.threads, props: l.props };
+  return JSON.stringify(o, null, 1);
+}
+
+/* 最近两段的原文：用来保持语气、避免重复、保证接得上 */
+function recentText(n) {
+  const ps = BOOK.paras.slice(-n).filter(p => clean(p.text));
+  return ps.map(p => '〔' + (p.pov || '?') + '〕' + clean(p.text)).join('\n\n');
+}
+
+function taskBlock(round, partial) {
+  const c = curChapter(), b = curBeat();
+  const L = [];
+  L.push('# 本次任务（以这里为准写这一段）');
+  L.push('- 视点人物：' + curPov() + '（人称：' + BOOK.narr.person + '）');
+  const od = clean(BOOK._dir);
+  const bb = (b && clean(b.text)) ? clean(b.text) : '';
+  if (od) L.push('- **这一段的剧情（作者刚给的，只能扩写它）**：' + od);
+  if (bb) L.push((od ? '- 故事板上这一条的安排（同属这一段，可作背景参考）' : '- **这一段的剧情（作者给的，只能扩写它）**') + '：' + bb);
+  if (!od && !bb) L.push('- 作者**没有给这一段的剧情**：只顺着上文自然往下写一小步，不要制造新事件、新人物、新转折。');
+  if (BOOK.narr.focus) L.push('- 描写侧重：' + BOOK.narr.focus);
+  if (BOOK.narr.rules && clean(BOOK.narr.rules)) L.push('- 作者的额外要求（照办）：' + clean(BOOK.narr.rules));
+  if (BOOK.narr.bans && clean(BOOK.narr.bans)) L.push('- 禁止出现：' + clean(BOOK.narr.bans));
+  const last = BOOK.paras.slice(-1)[0];
+  if (last && clean(last.text)) {
+    L.push('- **上一段的结尾原文**（从这里接着往下写）：\n' + clean(last.text).slice(-420));
+  }
+  const d = BOOK.dice.pending;
+  if (d) L.push('- 🎲 **随机结果（硬约束，必须朝这个方向写）**：' + d.table + ' 第 ' + d.face + ' 号 =「' + d.label + '」——' + (d.desc || ''));
+  L.push('- 目标字数：约 ' + CFG.len + ' 字（只写这一段，写完就停，不要替作者往下推。字数不够也没关系，不要为了凑字数重复或注水。）');
+  if (round > 0) L.push('\n（这一轮是**续写**：上面已经写了 ' + charCount(partial) + ' 字，从最后一句接着往下写，不要重复、不要重新开头、不要输出任何协议块。）');
+  return L.join('\n');
+}
+
+function buildMessages(round, partial) {
+  const p = [];
+  p.push('你是一台为**单独一位作者**服务的小说扩写引擎。作者给你剧情要点，你把它写成高质量的正文。\n'
+    + '你不是游戏的 GM，也不是聊天助手：不做裁决、不给选项、不推进作者没安排的剧情、不跟作者讨论。\n'
+    + '你的产出只有两样东西——正文，和两个用来更新界面的状态块。');
+  const sel = currentSelection();
+  p.push('# 世界核心（常驻）\n' + coreText());
+  if (sel.codexList.length) {
+    p.push('# 本段载入的设定条目（按需取用）\n'
+      + '**只能用这些条目里写到的设定。需要用到没列出来的东西时，不要自己发明，写进幕后块的 hooks。**\n\n'
+      + sel.codexText);
+  }
+  if (sel.cardList.length) {
+    p.push('# 本段的人物卡\n' + sel.cardText
+      + '\n（没列出来的人物＝这一段不需要写他们。不要自行编造新人物。）'
+      + '\n（人物的“秘密”是他的隐藏动机，不要在正文里直接说破。）');
+  }
+  BOOK.lastInject = {
+    codex: sel.codexList.map(r => clean(r.e.name)),
+    cards: sel.cardList.map(r => clean(r.c.name)),
+    mode: BOOK._picked ? 'ai' : 'local',
+  };
+
+  const nar = BOOK.narr;
+  const styleName = nar.style || STYLE_DEFAULT;
+  const sr = styleRuleOf(styleName);
+  p.push('# 文风语体：' + styleName + '（硬性要求）\n' + sr.rule + '\n' + (ANCIENT(styleName)
+    ? '这一档允许文言腔调与说书腔，不必刻意现代化。'
+    : STYLE_BAN + '\n语体由这一档决定，**不要因为世界观“看起来像古代”就自动改用古风**。'));
+  p.push('# 叙事人称：' + nar.person + '\n' + (nar.person === '第三人称全知'
+    ? '可以为不同人物切换视点，但同一个段落里不要跳来跳去——一段只跟一个人。'
+    : nar.person === '第一人称'
+      ? '以视点人物的「我」来写。'
+      : '只跟视点人物，写他看得见、听得到、想得到的。'));
+  if (nar.realism !== false) p.push(REALISM_SPEC);
+  p.push(writeRules(nar));
+  /* 导演旋钮：节奏 / 情感强度 / 意外性 / 主题 / 长期笔记（从游戏版的上帝视角搬来） */
+  const d = DIR(), dl = [];
+  dl.push('- 节奏：' + PACES[d.pace] + '。');
+  dl.push('- 情感强度：' + EMOTIONS[d.emotion] + '。');
+  dl.push('- 意外性：' + SURPRISE[d.surprise] + '。');
+  if (clean(d.theme)) dl.push('- 主题焦点：始终围绕「' + clean(d.theme) + '」展开，让事件与人物都服务于它，但不要说教。');
+  if (clean(d.note)) dl.push('- 作者的长期笔记（长期生效，优先级很高）：\n' + clean(d.note));
+  p.push('# 导演（作者设定的写作倾向）\n' + dl.join('\n'));
+  if (factsOf().length) {
+    p.push('# 硬性事实（最高优先级，不可违背）\n'
+      + '以下事实是作者钉死的设定，无论上文怎么写都必须遵守，不得推翻、不得绕过：\n'
+      + factsOf().map((f, i) => (i + 1) + '. ' + clean(f)).join('\n'));
+  }
+  p.push(outputSpec(godOn()));
+  p.push(LEDGER_SPEC);
+  if (godOn()) p.push(GOD_SPEC);
+  p.push('# 故事板（作者的大纲，只作方向参考）\n' + outlineText());
+  p.push('# 账本（已经发生的事实，必须与之保持一致）\n' + ledgerText());
+  const sum = clean(BOOK.ledger.summary);
+  if (sum) p.push('# 长期摘要（更早的剧情）\n' + sum);
+  const rec = recentText(2);
+  if (rec) p.push('# 最近写过的原文（保持语气、不要重复）\n' + rec);
+  p.push(taskBlock(round, partial));
+
+  const msgs = [{ role: 'system', content: p.join('\n\n') }];
+  if (round > 0 && clean(partial)) {
+    msgs.push({ role: 'assistant', content: clean(partial) });
+    msgs.push({ role: 'user', content: '接着上面最后一句继续往下写这一段。不要重复已经写过的内容，不要重新开头，不要输出任何协议块，只输出正文。' });
+  } else {
+    msgs.push({ role: 'user', content: '开始写这一段。' });
+  }
+  return msgs;
+}
+
+/* ============================================================================
+   协议块解析（沿用游戏版踩过坑的写法：边界到下一个 <<< 或文末）
+   ============================================================================ */
+function stripTrailingCommas(s) {
+  let out = '', inStr = false, esc = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (inStr) {
+      out += c;
+      if (esc) esc = false; else if (c === '\\') esc = true; else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') { inStr = true; out += c; continue; }
+    if (c === ',') {
+      let j = i + 1;
+      while (j < s.length && /\s/.test(s[j])) j++;
+      if (s[j] === '}' || s[j] === ']') continue;
+    }
+    out += c;
+  }
+  return out;
+}
+function tryJSON(raw) {
+  let r = String(raw || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  const a = r.indexOf('{'), b = r.lastIndexOf('}');
+  const cands = [r];
+  if (a > -1 && b > a && (a > 0 || b < r.length - 1)) cands.push(r.slice(a, b + 1));
+  for (const t of cands) {
+    try { return JSON.parse(t); } catch (e) {}
+    try { return JSON.parse(stripTrailingCommas(t)); } catch (e) {}
+  }
+  return null;
+}
+function extractBlock(full, tag) {
+  const re = new RegExp('<<<\\s*' + tag + '\\s*>>>([\\s\\S]*?)(?=<<<|$)', 'i');
+  const m = re.exec(String(full || ''));
+  return m ? tryJSON(m[1]) : null;
+}
+function stripBlocks(s) {
+  let t = String(s || '');
+  /* 1) 先挑完整的块（<<<TAG>>> … <<<END>>>）——**必须先做这一步**：
+     自动续写时正文是分几轮拼起来的，若只用“到下一个 <<< 或文末”，
+     那个 <<<END>>> 之后的续写正文会被一并删掉。*/
+  t = t.replace(/<<<\s*(?:LEDGER|GOD|STATE|MAP)\s*>>>[\s\S]*?<<<\s*END\s*>>>/gi, '');
+  /* 2) 没闭合的块（模型漏了 END）：到下一个 <<< 或文末 */
+  t = t.replace(/<<<\s*(?:LEDGER|GOD|STATE|MAP)\s*>>>[\s\S]*?(?=<<<|$)/gi, '');
+  /* 3) 剩下的孤立标记 */
+  t = t.replace(/<<<[^>]*>>>/g, '');
+  return t.replace(/^[\s\-—–]+/, '').trim();
+}
+function parseReply(full) {
+  const out = { text: stripBlocks(full), ledger: extractBlock(full, 'LEDGER') || extractBlock(full, 'STATE'), god: extractBlock(full, 'GOD') };
+  if (!out.ledger && !/<<<[^>]*>>>/.test(String(full || ''))) out.text = clean(full);
+  return out;
+}
+
+/* ============================================================================
+   账本合并：只覆盖 AI 真的给了的字段
+   ============================================================================ */
+function mergePeople(old, inc) {
+  const out = (old || []).map(p => Object.assign({}, p));
+  inc.forEach(np => {
+    if (!np || !clean(np.name)) return;
+    const name = clean(np.name);
+    let t = out.filter(p => clean(p.name) === name)[0];
+    if (!t) { t = { name: name, role: '', where: '', body: '', mood: '', goal: '', items: [], knows: [], unaware: [] }; out.push(t); }
+    ['role', 'where', 'body', 'mood', 'goal'].forEach(k => { if (typeof np[k] === 'string') t[k] = clean(np[k]); });
+    if (Array.isArray(np.items))   t.items   = arr(np.items);
+    if (Array.isArray(np.knows))   t.knows   = arr(np.knows);
+    if (Array.isArray(np.unaware)) t.unaware = arr(np.unaware);
+  });
+  return out;
+}
+function mergeByName(old, inc, keys) {
+  const out = (old || []).map(x => Object.assign({}, x));
+  inc.forEach(nx => {
+    if (!nx || !clean(nx.name)) return;
+    let t = out.filter(x => clean(x.name) === clean(nx.name))[0];
+    if (!t) { t = { name: clean(nx.name) }; out.push(t); }
+    keys.forEach(k => { if (typeof nx[k] === 'string') t[k] = clean(nx[k]); });
+  });
+  return out;
+}
+function mergeLedger(inc) {
+  if (!inc || typeof inc !== 'object') return false;
+  const l = BOOK.ledger;
+  let touched = false;
+  ['time', 'place', 'pov'].forEach(k => { if (typeof inc[k] === 'string' && clean(inc[k])) { l[k] = clean(inc[k]); touched = true; } });
+  /* summary 是累积的长期记忆：每段的摘要追加进去，而不是覆盖 */
+  if (typeof inc.summary === 'string' && clean(inc.summary) && l.summary.indexOf(clean(inc.summary)) < 0) {
+    l.summary = (clean(l.summary) ? clean(l.summary) + '\n' : '') + '· ' + clean(inc.summary);
+    if (l.summary.length > 1800) l.summary = l.summary.slice(-1800);
+    touched = true;
+  }
+  if (Array.isArray(inc.people) && inc.people.length) { l.people = mergePeople(l.people, inc.people); touched = true; }
+  if (Array.isArray(inc.threads) && inc.threads.length) { l.threads = mergeByName(l.threads, inc.threads, ['state', 'note']); touched = true; }
+  if (Array.isArray(inc.props) && inc.props.length) { l.props = mergeByName(l.props, inc.props, ['holder', 'note']); touched = true; }
+  return touched;
+}
+function mergeGod(inc) {
+  if (!inc || typeof inc !== 'object') return;
+  const g = BOOK.god;
+  if (typeof inc.truth === 'string') g.truth = clean(inc.truth);
+  if (typeof inc.if_inaction === 'string') g.if_inaction = clean(inc.if_inaction);
+  ['agenda', 'foreshadow', 'risks'].forEach(k => { if (Array.isArray(inc[k]) && inc[k].length) g[k] = arr(inc[k]); });
+  if (Array.isArray(inc.hooks) && inc.hooks.length) {
+    g.hooks = arr(inc.hooks).map(h => typeof h === 'string' ? { label: h.slice(0, 12), desc: '' } : { label: clean(h.label), desc: clean(h.desc) }).filter(h => h.label || h.desc);
+  }
+}
+/* ============================================================================
+   小工具：toast / 弹层 / 路径赋值
+   ============================================================================ */
+function toast(msg, ms) {
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  $('#toasts').appendChild(el);
+  setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); }, ms || 3200);
+}
+function openSheet(html, after) {
+  $('#sheetPanel').innerHTML = html;
+  $('#sheet').classList.add('on');
+  $('#sheetPanel').scrollTop = 0;
+  if (after) after();
+}
+function closeSheet() { $('#sheet').classList.remove('on'); $('#sheetPanel').innerHTML = ''; }
+$('#sheet').addEventListener('click', e => { if (e.target.classList.contains('mask')) closeSheet(); });
+function setByPath(obj, path, val) {
+  const ks = path.split('.'); let o = obj;
+  for (let i = 0; i < ks.length - 1; i++) { if (o[ks[i]] == null) o[ks[i]] = {}; o = o[ks[i]]; }
+  o[ks[ks.length - 1]] = val;
+}
+function getByPath(obj, path) {
+  return path.split('.').reduce((o, k) => (o == null ? o : o[k]), obj);
+}
+function setBusy(on, txt) {
+  $('#busy').classList.toggle('on', !!on);
+  if (txt) $('#busyTxt').textContent = txt;
+  $('#btnStop').style.display = on ? '' : 'none';
+}
+/* 两个隐藏的文件选择器：一个吃世界设定，一个吃全书备份 */
+function mkPicker(id) {
+  const el = document.createElement('input');
+  el.type = 'file'; el.id = id; el.accept = '.json,application/json'; el.style.display = 'none';
+  document.body.appendChild(el); return el;
+}
+const worldPick = mkPicker('worldPick');
+const bookPick  = mkPicker('bookPick');
+function pickFile(el, then) {
+  el.value = '';
+  el.onchange = e => { const f = e.target.files && e.target.files[0]; if (f) then(f); };
+  el.click();
+}
+function readText(file, then) {
+  const fr = new FileReader();
+  fr.onload = () => then(String(fr.result));
+  fr.readAsText(file);
+}
+
+/* ============================================================================
+   接口
+   ============================================================================ */
+function thinkParams() {
+  const m = THINK_MODES.filter(x => x.key === CFG.think)[0] || THINK_MODES[0];
+  return Object.assign({}, m.p);
+}
+function extraParams() {
+  const t = clean(CFG.extra); if (!t) return {};
+  try { const o = JSON.parse(t); return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; }
+}
+function modelsUrlOf(apiUrl) {
+  const u = clean(apiUrl).replace(/\/+$/, '');
+  if (!u) return '';
+  if (/\/chat\/completions$/i.test(u)) return u.replace(/\/chat\/completions$/i, '/models');
+  if (/\/completions$/i.test(u)) return u.replace(/\/completions$/i, '/models');
+  if (/\/v\d+$/i.test(u)) return u + '/models';
+  return /\/models$/i.test(u) ? u : u + '/models';
+}
+const USAGE_KEY = 'inkhall.usage';
+function cacheOf(u) {
+  if (!u) return 0;
+  if (typeof u.prompt_cache_hit_tokens === 'number') return u.prompt_cache_hit_tokens;
+  const d = u.prompt_tokens_details || u.prompt_cache_hit_tokens_details || null;
+  return (d && typeof d.cached_tokens === 'number') ? d.cached_tokens : 0;
+}
+function addUsage(u) {
+  if (!u) return;
+  const p = +u.prompt_tokens || 0, c = +u.completion_tokens || 0, cached = cacheOf(u);
+  const o = load(USAGE_KEY, { prompt: 0, completion: 0, cached: 0, calls: 0, last: null });
+  o.prompt += p; o.completion += c; o.cached += cached; o.calls++;
+  o.last = { p: p, c: c, cached: cached, at: Date.now() };
+  try { localStorage.setItem(USAGE_KEY, JSON.stringify(o)); } catch (e) {}
+  if (!BOOK.stats) BOOK.stats = { prompt: 0, completion: 0, cached: 0, calls: 0 };
+  BOOK.stats.prompt += p; BOOK.stats.completion += c; BOOK.stats.cached += cached; BOOK.stats.calls++;
+  return { local: o, book: BOOK.stats, last: o.last };
+}
+function usageLine(s) {
+  if (!s || !s.calls) return '还没有数据';
+  const pct = s.prompt ? Math.round(s.cached / s.prompt * 100) : 0;
+  return s.calls + ' 次请求 · 输入 ' + s.prompt + ' / 输出 ' + s.completion + ' tokens'
+    + (s.cached ? '（其中 ' + s.cached + ' 命中缓存，省了约 ' + pct + '%）' : '（没命中缓存）');
+}
+function openStats() {
+  const loc = load(USAGE_KEY, { prompt: 0, completion: 0, cached: 0, calls: 0, last: null });
+  const bk = BOOK.stats || { prompt: 0, completion: 0, cached: 0, calls: 0 };
+  const n = BOOK.paras.length || 0;
+  openSheet('<button class="close" data-x="1">✕</button><h3>📊 运行与统计</h3>'
+    + '<div class="card" style="margin-top:12px"><div class="mut">本书</div>'
+    + '<div class="kv"><span class="k">累计</span><em>' + usageLine(bk) + '</em></div>'
+    + '<div class="kv"><span class="k">正文</span><em>' + n + ' 段 · ' + bookChars() + ' 字</em></div>'
+    + '<div class="kv"><span class="k">平均</span><em>' + (bk.calls ? Math.round(bk.completion / bk.calls) + ' 输出 tokens / 段' : '—') + '</em></div></div>'
+    + '<div class="card"><div class="mut">这台设备（所有书合计）</div><div class="kv"><span class="k">累计</span><em>' + usageLine(loc) + '</em></div></div>'
+    + '<div class="card"><div class="mut">提示词构成（每段重发一次）</div>'
+    + '<div class="kv"><span class="k">世界核心</span><em>' + charCount(coreText()) + ' 字</em></div>'
+    + '<div class="kv"><span class="k">本段设定</span><em>' + currentSelection().codexList.length + ' 条（约 ' + currentSelection().chars + ' 字）</em></div>'
+    + '<div class="kv"><span class="k">文风/铁律/契约</span><em>固定文案，可被接口缓存</em></div>'
+    + '<div class="mut" style="margin-top:8px">估算：世界核心＋本段设定＋人物卡＋文风契约约 '
+    + (charCount(coreText()) + currentSelection().chars + currentSelection().cardChars + 3400) + ' 字（每段重发一次）</div></div>'
+    + '<button class="btn wide" data-x="clear">清空这台设备的累计</button>', null);
+  $('#sheetPanel').onclick = ev => {
+    const el = ev.target.closest('[data-x]'); if (!el) return;
+    if (el.dataset.x === '1') return closeSheet();
+    if (el.dataset.x === 'clear') { localStorage.removeItem(USAGE_KEY); toast('已清空'); closeSheet(); renderApi(); }
+  };
+}
+
+async function callLLM(messages, onDelta) {
+  if (!clean(CFG.apiUrl)) throw new Error('还没填接口地址（菜单 → 接口设置）');
+  if (!clean(CFG.model)) throw new Error('还没填模型名');
+  const headers = { 'Content-Type': 'application/json' };
+  if (clean(CFG.apiKey)) headers['Authorization'] = 'Bearer ' + CFG.apiKey;
+  const streaming = CFG.stream !== false;
+  const base = { model: CFG.model, messages: messages, temperature: typeof CFG.temp === 'number' ? CFG.temp : 0.9, stream: streaming };
+  if (streaming) base.stream_options = { include_usage: true };
+  const injected = Object.assign({}, thinkParams(), extraParams());
+  const send = b => fetch(CFG.apiUrl, { method: 'POST', headers: headers, body: JSON.stringify(b) });
+
+  let res = await send(Object.assign({}, base, injected));
+  const hasExtras = Object.keys(injected).length > 0 || !!base.stream_options;
+  if (!res.ok && (res.status === 400 || res.status === 422) && hasExtras) {
+    const minimal = Object.assign({}, base); delete minimal.stream_options;
+    res = await send(minimal);
+  }
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error('HTTP ' + res.status + ' — ' + String(t || res.statusText).slice(0, 300));
+  }
+  const ctype = res.headers.get('content-type') || '';
+  if (!res.body || ctype.indexOf('application/json') >= 0) {
+    const j = await res.json();
+    if (j.error) throw new Error(j.error.message || JSON.stringify(j.error).slice(0, 200));
+    const ch = (j.choices && j.choices[0]) || {};
+    const msg = ch.message || {};
+    const text = typeof msg.content === 'string' ? msg.content : '';
+    if (!text) throw new Error('接口返回空内容' + (ch.finish_reason === 'length' ? '（可能是输出被长度上限截断）' : '') + '：' + JSON.stringify(j).slice(0, 200));
+    addUsage(j.usage); if (onDelta) onDelta(text);
+    return { text: text, finish: ch.finish_reason || '' };
+  }
+  const reader = res.body.getReader(); const dec = new TextDecoder();
+  let buf = '', full = '', usage = null, finish = '';
+  for (;;) {
+    const r = await reader.read(); if (r.done) break;
+    buf += dec.decode(r.value, { stream: true });
+    let idx;
+    while ((idx = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, idx).trim(); buf = buf.slice(idx + 1);
+      if (!line || line.charAt(0) === ':' || line.indexOf('data:') !== 0) continue;
+      const data = line.slice(5).trim();
+      if (data === '[DONE]') continue;
+      let j; try { j = JSON.parse(data); } catch (e) { continue; }
+      if (j.usage) usage = j.usage;
+      const ch = (j.choices && j.choices[0]) || {};
+      if (ch.finish_reason) finish = ch.finish_reason;
+      const d = (ch.delta && typeof ch.delta.content === 'string') ? ch.delta.content : '';
+      if (d) { full += d; if (onDelta) onDelta(d, full); }
+    }
+  }
+  addUsage(usage);
+  if (!clean(full)) throw new Error('接口这次没返回任何正文（可能是模型不支持流式，或输出额度被「思考」吃掉了——试试把思考程度设为关闭，或在额外参数里加 {"max_tokens":4096}）');
+  return { text: full, finish: finish };
+}
+
+async function fetchModels() {
+  if (!clean(CFG.apiUrl)) { toast('先填接口地址'); return; }
+  const url = modelsUrlOf(CFG.apiUrl);
+  try {
+    const res = await fetch(url, { headers: clean(CFG.apiKey) ? { Authorization: 'Bearer ' + CFG.apiKey } : {} });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    const list = arr((j.data || j.models || []).map(m => m && (m.id || m.name))).filter(Boolean);
+    if (!list.length) throw new Error('列表是空的');
+    try { localStorage.setItem(K.models, JSON.stringify({ url: url, list: list })); } catch (e) {}
+    fillModels(list);
+    toast('拉到 ' + list.length + ' 个模型');
+  } catch (e) {
+    toast('拉取失败：' + e.message + '（多半是这个接口不允许跨域，或地址不对。模型名也可以手输。）', 5200);
+  }
+}
+function fillModels(list) {
+  const dl = $('#modelList');
+  if (dl) dl.innerHTML = list.map(m => '<option value="' + esc(m) + '"></option>').join('');
+  const h = $('#modelHint');
+  if (h) h.innerHTML = '接口里有 <b>' + list.length + '</b> 个模型：' + esc(list.slice(0, 10).join('、')) + (list.length > 10 ? ' …' : '')
+    + '<br>用输入框点一下就能选，也可以手输（自建网关 / Ollama 的模型名常常不在列表里）。';
+}
+function fillModelsFromCache() {
+  const o = load(K.models, null);
+  if (o && arr(o.list).length && o.url === modelsUrlOf(CFG.apiUrl)) fillModels(o.list);
+}
+async function testConn() {
+  setBusy(true, '测试连接…');
+  try {
+    const r = await callLLM([{ role: 'system', content: '只回一个词：好' }, { role: 'user', content: '测试' }], null);
+    toast('连接正常 ✅ 返回：' + clean(stripBlocks(r.text)).slice(0, 40), 5000);
+  } catch (e) { toast('连接失败：' + e.message, 7000); }
+  finally { setBusy(false); }
+}
+
+/* ============================================================================
+   生成
+   ============================================================================ */
+function makeStreamEl() {
+  const el = document.createElement('div');
+  el.className = 'para draft';
+  el.innerHTML = '<div class="meta"><span class="pov">' + esc(curPov()) + '</span><span class="st">生成中…</span></div><div class="body"></div>';
+  $('#paras').appendChild(el);
+  const body = el.querySelector('.body');
+  const wrap = $('#main');
+  return { el: el, push: t => { body.innerHTML = esc(t) + '<span class="cursor"></span>'; wrap.scrollTop = wrap.scrollHeight; } };
+}
+
+async function writePara() {
+  if (genState.running) { toast('正在写，等一下'); return; }
+  if (!curChapter()) { toast('先在故事板建一章，并写一条 beat'); return; }
+  /* 方向框是这一段剧情的来源；没写就是「顺写」 */
+  BOOK._dir = $('#dirBox') ? clean($('#dirBox').value) : '';
+  const target = Math.max(200, +CFG.len || 800);
+  genState = { running: true, stop: false, text: '' };
+  const stream = makeStreamEl();
+  setBusy(true, '正在写这一段…（目标 ' + target + ' 字）');
+  /* 世界书调用方式：让 AI 先挑一遍条目（多一次小请求），挑不出来就退回本地命中 */
+  BOOK._picked = null;
+  if (CFG.pick === 'ai' && BOOK.codex.length) {
+    setBusy(true, '正在挑这一段的设定…');
+    try { BOOK._picked = await aiPickEntries(); } catch (e) { BOOK._picked = null; }
+    setBusy(true, '正在写这一段…（目标 ' + target + ' 字）');
+  }
+  let all = '', led = null, god = null, finish = '', err = '';
+  try {
+    for (let round = 0; round < 3; round++) {
+      if (genState.stop) break;
+      const msgs = buildMessages(round, round > 0 ? stripBlocks(all) : '');
+      const r = await callLLM(msgs, (d, full) => {
+        const shown = round > 0 ? stripBlocks(all) + stripBlocks(full) : stripBlocks(full);
+        stream.push(shown);
+      });
+      all += r.text; finish = r.finish || finish;
+      const p = parseReply(r.text);
+      if (p.ledger) led = p.ledger;
+      if (p.god) god = p.god;
+      if (charCount(stripBlocks(all)) >= target) break;
+      if (genState.stop) break;
+      setBusy(true, '已写 ' + charCount(stripBlocks(all)) + ' 字，接着补到 ' + target + ' 字…');
+    }
+  } catch (e) { err = e.message; }
+  genState.running = false;
+
+  const text = stripBlocks(all);
+  stream.el.remove();
+  setBusy(false);
+
+  if (err || !clean(text)) {
+    renderDoc();
+    if (text && clean(text)) { /* 有正文就照收 */ }
+    if (err) toast('生成失败：' + err, 8000);
+    return;
+  }
+  const beat = curBeat();
+  BOOK.paras.push({ id: uid(), beatId: beat ? beat.id : '', pov: curPov(), text: text, state: 'draft', dir: clean(BOOK._dir) });
+  if (led) mergeLedger(led);
+  if (god) mergeGod(god);
+  if (!BOOK.ledger.pov) BOOK.ledger.pov = curPov();
+  const d = BOOK.dice.pending;
+  if (d) { BOOK.dice.last = Object.assign({}, d); BOOK.dice.pending = null; }
+  /* 写完就清空方向框，等作者给下一段 */
+  BOOK._dir = '';
+  if ($('#dirBox')) $('#dirBox').value = '';
+  BOOK._picked = null;
+  save(); renderAll();
+  const n = charCount(text);
+  if (finish === 'length') toast('这一段被输出长度上限截断了（' + n + ' 字）。可以在接口设置里加 {"max_tokens":4096} 试试。', 7000);
+  else if (n < target * 0.7) toast('只写了 ' + n + ' 字（目标 ' + target + '）。点「再写一段」会接着往下写。', 5000);
+  else toast('写好了：' + n + ' 字');
+}
+
+/* 让 AI 自己挑条目：只发索引（名字 + 一句话），不发正文；挑不出来就返回 null 退回本地命中 */
+async function aiPickEntries() {
+  const idx = BOOK.codex.map(e => '[' + (e.kind || '其他') + '] ' + clean(e.name)
+    + (arr(e.keys).length ? '（' + arr(e.keys).join('/') + '）' : '') + '：'
+    + clean(e.body).replace(/\s+/g, ' ').slice(0, 50)).join('\n');
+  const cards = BOOK.cards.map(c => '[人物] ' + clean(c.name) + '：' + clean(c.role) + ' ' + clean(c.persona)).join('\n');
+  const task = '视点人物：' + curPov() + '\n这一段的剧情：' + (clean((curBeat() || {}).text) || '（作者没指定，顺上文继续）');
+  const msgs = [
+    { role: 'system', content: '你是一个检索器。只输出 JSON，不要任何解释文字。' },
+    { role: 'user', content: '下面是设定条目索引与人物索引。挑出写「这一段」真正需要的东西，最多 10 条。宁可少挑，不要挑无关的。\n\n'
+      + idx + '\n' + cards + '\n\n' + task + '\n\n只输出：{"codex":["条目名"],"cards":["人物名"]}' },
+  ];
+  const r = await callLLM(msgs, null);
+  const o = tryJSON(r.text);
+  if (!o) return null;
+  return { codex: arr(o.codex), cards: arr(o.cards) };
+}
+
+async function rewriteLast() {
+  const last = BOOK.paras[BOOK.paras.length - 1];
+  if (!last) { toast('还没有段落'); return; }
+  if (!window.confirm('重写最后一段？现在这段会被删掉。')) return;
+  BOOK.paras.pop();
+  await writePara();
+}
+
+/* ============================================================================
+   渲染
+   ============================================================================ */
+const TABS = ['board', 'doc', 'people', 'codex', 'god', 'look', 'setup', 'api'];
+const TAB_VIEWS = ['board', 'doc', 'people', 'codex', 'god'];
+function show(v) {
+  TABS.forEach(t => { const el = $('#view-' + t); if (el) el.classList.toggle('on', t === v); });
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  $('#main').scrollTop = 0;
+  if (v === 'api') renderApi();          /* 接口页每次进来都从 CFG 回填，否则看起来像空的 */
+  if (v === 'look') renderLook();
+}
+/* ============================================================================
+   外观
+   ============================================================================ */
+const FONTS = {
+  '系统默认': '"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Segoe UI",sans-serif',
+  '衬线（宋体）': '"Songti SC","SimSun","Noto Serif CJK SC",serif',
+  '楷体': '"KaiTi","STKaiti","Kaiti SC",serif',
+  '黑体': '"PingFang SC","Microsoft YaHei","Heiti SC",sans-serif',
+};
+const THEMES = { dark: '深色', light: '浅色', sepia: '羊皮纸', night: '夜间护眼' };
+let LOOK = { theme: 'dark', accent: '', tx: 15.5, ui: 15, lh: 1.9, maxw: 760, font: '系统默认', bgimg: '' };
+function saveLook() { try { localStorage.setItem('inkhall.look', JSON.stringify(LOOK)); } catch (e) {} }
+function applyLook() {
+  const r = document.body.style;      /* 必须写在 body 上：body[data-theme] 规则会盖过 <html> 上的变量 */
+  document.body.setAttribute('data-theme', LOOK.theme || 'dark');
+  if (LOOK.accent) r.setProperty('--acc', LOOK.accent); else r.removeProperty('--acc');
+  r.setProperty('--tx-size', (LOOK.tx || 15.5) + 'px');
+  r.setProperty('--ui-size', (LOOK.ui || 15) + 'px');
+  r.setProperty('--lh', String(LOOK.lh || 1.9));
+  r.setProperty('--maxw', (LOOK.maxw || 760) + 'px');
+  r.setProperty('--font-body', FONTS[LOOK.font] || FONTS['系统默认']);
+  r.backgroundImage = LOOK.bgimg ? 'linear-gradient(rgba(8,10,14,.42),rgba(8,10,14,.42)), url("' + String(LOOK.bgimg).replace(/["()]/g, '') + '")' : '';
+  r.backgroundSize = 'cover';
+  r.backgroundAttachment = 'fixed';
+}
+function renderLook() {
+  const themeBtn = k => '<button class="btn sm" data-look="theme" data-v="' + k + '" style="' + (LOOK.theme === k ? 'border-color:var(--acc);color:var(--acc)' : '') + '">' + THEMES[k] + '</button>';
+  const fontOpt = k => '<option' + (LOOK.font === k ? ' selected' : '') + '>' + esc(k) + '</option>';
+  const num = (k, label, min, max, step, unit) => '<label class="lab"><b>' + label + '</b>　<span class="mut" id="lab_' + k + '">' + LOOK[k] + (unit || '') + '</span></label>'
+    + '<input type="range" class="f" data-look="' + k + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + LOOK[k] + '">';
+  const sw = ['', '#c8a15a', '#7fb6f0', '#6fd39a', '#e0b567', '#e08a8a', '#b58fe0'];
+  $('#lookBody').innerHTML =
+    '<div class="card"><div class="mut">主题</div><div class="row wrap" style="margin-top:8px">'
+    + Object.keys(THEMES).map(themeBtn).join('') + '</div>'
+    + '<label class="lab"><b>强调色</b>（留空用主题自带的）</label><div class="row wrap">'
+    + '<label class="swatch' + (LOOK.accent === '' ? ' on' : '') + '" style="background:var(--acc)" title="跟随主题"><input type="radio" name="acc" data-look="accent" data-v="" style="display:none"' + (LOOK.accent === '' ? ' checked' : '') + '></label>'
+    + sw.slice(1).map(c => '<label class="swatch' + (LOOK.accent === c ? ' on' : '') + '" style="background:' + c + '"><input type="radio" name="acc" data-look="accent" data-v="' + c + '" style="display:none"' + (LOOK.accent === c ? ' checked' : '') + '></label>').join('')
+    + '<input class="f" type="color" data-look="accent" value="' + esc(LOOK.accent || '#c8a15a') + '" style="width:52px;padding:2px"></div>'
+    + '<label class="lab"><b>正文字体</b></label><select class="f" data-look="font">' + Object.keys(FONTS).map(fontOpt).join('') + '</select>'
+    + num('tx', '正文字号', 13, 24, 0.5, 'px')
+    + num('lh', '行高', 1.4, 2.6, 0.05, '') + num('maxw', '正文宽度', 480, 1200, 20, 'px') + num('ui', '界面字号', 13, 19, 0.5, 'px')
+    + '<label class="lab"><b>背景图 URL</b>（留空则用纯色）</label><input class="f" data-look="bgimg" value="' + esc(LOOK.bgimg) + '" placeholder="https://..."></div>'
+    + '<div class="card"><div class="mut">预览</div><div class="para" style="margin-top:8px">雨从万钟塔的铜檐上淌下来，把整条街洗成一片湿亮的铜色。她攥着裙摆，踩过水洼。</div></div>';
+}
+
+function renderTop() { $('#bookTitle').textContent = clean(BOOK.title) || '未命名'; }
+
+function renderBoard() {
+  const w = BOOK.world || {};
+  const coreChars = charCount(coreText());
+  $('#worldCard').innerHTML =
+    '<div class="row"><b class="grow" style="color:var(--acc)">' + esc(clean(w.title) || '还没填世界') + '</b></div>'
+    + '<div class="mut" style="margin-top:5px">' + (clean(w.tagline) ? esc(w.tagline) : '（还没有标语）') + '</div>'
+    + '<div class="mut" style="margin-top:7px">世界核心常驻 ' + coreChars + ' 字 · 世界书 ' + BOOK.codex.length
+    + ' 条 · 人物卡 ' + BOOK.cards.length + ' 张</div>'
+    + '<div class="row wrap" style="margin-top:9px">'
+    + '<button class="btn sm" data-act="goCodex">❖ 世界书</button>'
+    + '<button class="btn sm" data-act="goPeople">☺ 人物</button>'
+    + '<button class="btn sm" data-act="presets">✧ 换预设开局</button>'
+    + '<button class="btn sm" data-act="importWorld">⬆ 导入 Talehall 设定</button></div>';
+
+  const last = BOOK.lastInject;
+  const inj = last ? ('上一段载入：' + last.codex.length + ' 条设定 · ' + last.cards.length + ' 张人物卡' + (last.mode === 'ai' ? '（AI 挑选）' : '')) : '还没写过正文';
+  $('#progressCard').innerHTML =
+    '<div class="row"><b class="grow" style="color:var(--acc)">当前进度</b><span class="tag">' + esc(inj) + '</span></div>'
+    + '<div class="kv" style="margin-top:8px"><span class="k">时间</span><span class="v"><input class="f" id="lgTime" placeholder="故事内的时间"></span></div>'
+    + '<div class="kv"><span class="k">地点</span><span class="v"><input class="f" id="lgPlace" placeholder="当前地点"></span></div>'
+    + '<div class="kv"><span class="k">最近骰值</span><span class="v">' + (BOOK.dice.last ? esc(BOOK.dice.last.table + ' ' + BOOK.dice.last.face + ' · ' + BOOK.dice.last.label) : '<span class="mut">还没掷过</span>') + '</span></div>';
+  const t = $('#lgTime'); if (t) { t.value = BOOK.ledger.time || ''; t.oninput = e => { BOOK.ledger.time = e.target.value; save(); }; }
+  const pl = $('#lgPlace'); if (pl) { pl.value = BOOK.ledger.place || ''; pl.oninput = e => { BOOK.ledger.place = e.target.value; save(); }; }
+
+  const chs = BOOK.chapters;
+  $('#chapters').innerHTML = chs.length ? chs.map((c, i) => {
+    const beats = c.beats || [];
+    const done = beats.filter(b => b.state === 'done').length;
+    return '<div class="chap" data-cid="' + c.id + '">'
+      + '<div class="chap-hd"><input data-bind="chapters.' + i + '.title" value="' + esc(c.title) + '" placeholder="第 ' + (i + 1) + ' 章标题">'
+      + '<span class="cnt">' + done + '/' + beats.length + '</span>'
+      + '<button class="btn sm" data-act="delchapter" data-i="' + i + '">删</button></div>'
+      + beats.map((b, j) =>
+        '<div class="beat ' + (b.id === BOOK.cursor.beatId ? 'cur' : (b.state === 'done' ? 'done' : '')) + '">'
+        + '<span class="dot" data-act="togglebeat" data-i="' + i + '" data-j="' + j + '"></span>'
+        + '<textarea class="txt" rows="1" data-bind="chapters.' + i + '.beats.' + j + '.text" placeholder="这一条要发生什么…">' + esc(b.text) + '</textarea>'
+        + '<span class="acts">'
+        + '<button class="mini" data-act="expand" data-i="' + i + '" data-j="' + j + '">✎ 扩写</button>'
+        + '<button class="mini" data-act="delbeat" data-i="' + i + '" data-j="' + j + '">✕</button>'
+        + '</span></div>').join('')
+      + '<div class="beat" style="padding-left:10px"><span class="dot" style="background:transparent"></span>'
+      + '<button class="mini" data-act="addbeat" data-i="' + i + '">＋ 加一条</button></div>'
+      + '</div>';
+  }).join('') : '<div class="empty">还没有章节。<br>先建一章，再往里写 beat（一句话、一段梗概、整章大纲都行）。</div>';
+
+  $$('#chapters .beat .txt').forEach(t => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; });
+}
+
+function renderDoc() {
+  const b = curBeat(), c = curChapter();
+  const last = BOOK.paras.slice(-1)[0];
+  $('#docHead').innerHTML =
+    '<div class="t grow">' + esc(c ? (clean(c.title) || '未命名章节') : '还没有章节')
+    + '<br><em>' + bookChars() + ' 字 · ' + BOOK.paras.length + ' 段'
+    + (BOOK.lastInject ? ' · 载入 ' + BOOK.lastInject.codex.length + ' 条设定 / ' + BOOK.lastInject.cards.length + ' 张人物卡' + (BOOK.lastInject.mode === 'ai' ? '（AI 挑的）' : '') : '')
+    + '</em></div>';
+
+  $('#paras').innerHTML = BOOK.paras.length ? BOOK.paras.map((p, i) =>
+    '<div class="para ' + (p.state === 'draft' ? 'draft' : '') + '" data-pid="' + p.id + '">'
+    + '<div class="meta"><span class="pov">' + esc(p.pov || '未设视点') + '</span>'
+    + '<span class="st">' + (p.state === 'draft' ? '草稿' : '已定稿') + ' · ' + charCount(p.text) + ' 字</span></div>'
+    + (p.dir ? '<div class="mut" style="margin-bottom:6px">按你的方向写：' + esc(p.dir.slice(0, 40)) + (p.dir.length > 40 ? '…' : '') + '</div>' : '')
+    + '<div class="body">' + esc(p.text) + '</div>'
+    + '<div class="tools">'
+    + '<button class="mini" data-act="editpara" data-i="' + i + '">✎ 改</button>'
+    + '<button class="mini" data-act="donepara" data-i="' + i + '">' + (p.state === 'draft' ? '✓ 定稿' : '↺ 标回草稿') + '</button>'
+    + '<button class="mini" data-act="delpara" data-i="' + i + '">🗑 删</button>'
+    + '</div></div>').join('')
+    : '<div class="empty">还没有正文。<br>在故事板写一条 beat，点「✎ 扩写」；或者直接点下面的「再写一段」。</div>';
+
+  const vp = $('#vpLine');
+  if (vp) vp.innerHTML = '人称：' + esc(BOOK.narr.person) + ' · 视点：<b>' + esc(curPov()) + '</b>'
+    + (last && last.pov && last.pov !== curPov() ? '　<span class="tag a">上一段是 ' + esc(last.pov) + '</span>' : '');
+
+  const d = BOOK.dice.pending;
+  const dp = $('#dicePend');
+  dp.hidden = !d;
+  if (d) dp.innerHTML = '🎲 本次骰值：' + esc(d.label) + '（第 ' + d.face + ' 号）<button class="mini" data-act="cleardice">清除</button>';
+}
+function humanOf(name) { return (BOOK.ledger.people || []).filter(p => clean(p.name) === clean(name))[0] || null; }
+function cardOf(name) { return BOOK.cards.filter(c => clean(c.name) === clean(name))[0] || null; }
+function renderPeople() {
+  const names = [];
+  BOOK.cards.forEach(c => { if (clean(c.name) && names.indexOf(clean(c.name)) < 0) names.push(clean(c.name)); });
+  (BOOK.ledger.people || []).forEach(p => { if (clean(p.name) && names.indexOf(clean(p.name)) < 0) names.push(clean(p.name)); });
+  $('#povTop').innerHTML = '<option value="">（未设）</option>' + names.map(n =>
+    '<option value="' + esc(n) + '"' + (n === BOOK.narr.pov ? ' selected' : '') + '>' + esc(n) + '</option>').join('');
+
+  if (!names.length) {
+    $('#peopleView').innerHTML = '<div class="empty">还没有人物。<br>点下面的「＋ 新建人物卡」，或者换一套预设开局。</div>';
+    return;
+  }
+  $('#peopleView').innerHTML = names.map(n => {
+    const c = cardOf(n), ci = BOOK.cards.indexOf(c), st = humanOf(n), si = (BOOK.ledger.people || []).indexOf(st);
+    if (!c) {
+      return '<div class="card"><div class="row"><b class="grow">' + esc(n) + '</b>'
+        + '<button class="btn sm" data-act="mkcard" data-name="' + esc(n) + '">给它建张卡</button></div></div>';
+    }
+    const f = (k, label, ph) => '<div class="kv"><span class="k">' + label + '</span><span class="v"><input class="f" data-card="' + ci + '" data-k="' + k + '" value="' + esc(c[k]) + '" placeholder="' + esc(ph) + '"></span></div>';
+    const ft = (k, label, ph, rows) => '<label class="lab" style="margin-top:9px"><b>' + label + '</b></label><textarea class="f" rows="' + (rows || 2) + '" data-card="' + ci + '" data-k="' + k + '" placeholder="' + esc(ph) + '">' + esc(c[k]) + '</textarea>';
+    return '<div class="card person">'
+      + '<div class="nm"><input data-card="' + ci + '" data-k="name" value="' + esc(c.name) + '" placeholder="姓名">'
+      + '<button class="mini" data-act="pin" data-kind="card" data-i="' + ci + '">' + (c.always ? '★ 常驻' : '☆ 常驻') + '</button>'
+      + '<button class="btn sm" data-act="delcard" data-i="' + ci + '">删</button></div>'
+      + f('role', '身份', '例：塔拉辛落魄贵族家的三小姐')
+      + ft('look', '外貌', '')
+      + ft('persona', '性格', '以及他/她跟人说话的方式', 3)
+      + f('goal', '想要什么', '')
+      + ft('secret', '秘密', '瞒着所有人的那件事', 2)
+      + f('voice', '说话方式', '例：句子很短，从不反问')
+      + ft('back', '背景', '他/她是谁，经历过什么', 3)
+      + '<div class="sep"></div>'
+      + '<div class="mut">当前状态' + (st ? '' : '（还没建立）') + '</div>'
+      + (st ? ('<div class="kv"><span class="k">所在</span><span class="v"><input class="f" data-list="ledger.people" data-i="' + si + '" data-k="where" value="' + esc(st.where) + '"></span></div>'
+        + '<div class="kv"><span class="k">身体</span><span class="v"><input class="f" data-list="ledger.people" data-i="' + si + '" data-k="body" value="' + esc(st.body) + '"></span></div>'
+        + '<div class="kv"><span class="k">情绪</span><span class="v"><input class="f" data-list="ledger.people" data-i="' + si + '" data-k="mood" value="' + esc(st.mood) + '"></span></div>'
+        + '<div class="kv"><span class="k">随身</span><span class="v"><textarea class="f" rows="2" data-lines="ledger.people.' + si + '.items">' + esc(arr(st.items).join('\n')) + '</textarea></span></div>'
+        + '<div class="kv"><span class="k">已知</span><span class="v"><textarea class="f" rows="3" data-lines="ledger.people.' + si + '.knows">' + esc(arr(st.knows).join('\n')) + '</textarea></span></div>'
+        + '<div class="kv"><span class="k">不知道</span><span class="v"><textarea class="f" rows="3" data-lines="ledger.people.' + si + '.unaware">' + esc(arr(st.unaware).join('\n')) + '</textarea></span></div>')
+        : '<button class="btn sm" data-act="mkstate" data-name="' + esc(n) + '">＋ 建立当前状态</button>')
+      + '</div>';
+  }).join('');
+}
+function renderCodex() {
+  const w = BOOK.world || {};
+  const core = (path, label, ph, rows) => '<label class="lab"><b>' + label + '</b></label>'
+    + '<textarea class="f" rows="' + (rows || 2) + '" data-bind="world.' + path + '" placeholder="' + esc(ph || '') + '">' + esc(w[path]) + '</textarea>';
+  $('#coreView').innerHTML = '<div class="card">'
+    + core('title', '世界名称', '例：艾厄洛姆德大陆')
+    + core('tagline', '一句话标语', '')
+    + core('era', '时代与技术水平', '')
+    + core('geo', '地理概貌', '')
+    + core('races', '种族与物种', '')
+    + core('daily', '日常生活的质感', '物价、气候、气味、街上的谣言…')
+    + core('power', '力量体系：本质与来源', '')
+    + core('powerRank', '力量体系：等级划分', '')
+    + core('powerCost', '力量体系：代价与限制', '')
+    + core('powerLaw', '不可违背的定律', '', 3)
+    + core('rules', '硬规则（本作不可违反）', '例：死者不可复活；时间不可逆流。', 3)
+    + core('threat', '威胁谱系', '')
+    + '</div>';
+
+  const kind = $('#codexKind').value, q = clean($('#codexSearch').value);
+  const hit = BOOK.codex.map((e, i) => ({ e: e, i: i })).filter(x =>
+    (kind === 'all' || (x.e.kind || '其他') === kind) &&
+    (!q || (clean(x.e.name) + ' ' + arr(x.e.keys).join(' ') + ' ' + clean(x.e.body)).indexOf(q) >= 0));
+  $('#codexView').innerHTML = hit.length ? hit.map(x => {
+    const e = x.e;
+    return '<div class="card">'
+      + '<div class="row"><select class="f" style="width:auto" data-codex="' + x.i + '" data-k="kind">'
+      + CODEX_KINDS.map(k => '<option' + (k === (e.kind || '其他') ? ' selected' : '') + '>' + k + '</option>').join('') + '</select>'
+      + '<input class="f grow" data-codex="' + x.i + '" data-k="name" value="' + esc(e.name) + '" placeholder="条目名">'
+      + '<button class="mini" data-act="pin" data-kind="codex" data-i="' + x.i + '">' + (e.always ? '★ 常驻' : '☆ 常驻') + '</button>'
+      + '<button class="btn sm" data-act="delcodex" data-i="' + x.i + '">删</button></div>'
+      + '<input class="f" style="margin-top:7px" data-codex="' + x.i + '" data-k="keys" value="' + esc(arr(e.keys).join('、')) + '" placeholder="别名 / 关键词（顿号或逗号分隔，命中这些词就会自动带上）">'
+      + '<textarea class="f" style="margin-top:7px" rows="4" data-codex="' + x.i + '" data-k="body" placeholder="这条设定写详细一点，命中时才会整段送进去">' + esc(e.body) + '</textarea>'
+      + '</div>';
+  }).join('') : '<div class="empty">没有匹配的条目。</div>';
+
+  const sel = currentSelection();
+  $('#pickHint').innerHTML = '世界书共 ' + BOOK.codex.length + ' 条（常驻 ' + BOOK.codex.filter(e => e.always).length + ' 条）。'
+    + '按当前 beat 与视点人物估一下，下一段会带：<b>' + esc(sel.codexList.map(r => r.e.name).join('、') || '（无）') + '</b>'
+    + '　＋人物卡：<b>' + esc(sel.cardList.map(r => r.c.name).join('、') || '（无）') + '</b>'
+    + '<br>合计约 ' + (sel.chars + sel.cardChars) + ' 字' + (sel.codexList.length < BOOK.codex.length ? '（没命中的条目不占 token）' : '');
+}
+function renderLedgerLegacy() { if (1) return;   /* 已废弃：账本拆成了「人物」与「世界书」 */
+  $('#lgTime').value = BOOK.ledger.time || '';
+  $('#lgPlace').value = BOOK.ledger.place || '';
+  const ps = BOOK.ledger.people || [];
+  $('#people').innerHTML = ps.length ? ps.map((p, i) =>
+    '<div class="card person">'
+    + '<div class="nm"><input data-list="ledger.people" data-i="' + i + '" data-k="name" value="' + esc(p.name) + '" placeholder="姓名">'
+    + '<button class="btn sm" data-act="delperson" data-i="' + i + '">删</button></div>'
+    + '<div class="kv"><span class="k">身份</span><span class="v"><input class="f" data-list="ledger.people" data-i="' + i + '" data-k="role" value="' + esc(p.role) + '"></span></div>'
+    + '<div class="kv"><span class="k">所在</span><span class="v"><input class="f" data-list="ledger.people" data-i="' + i + '" data-k="where" value="' + esc(p.where) + '"></span></div>'
+    + '<div class="kv"><span class="k">身体</span><span class="v"><input class="f" data-list="ledger.people" data-i="' + i + '" data-k="body" value="' + esc(p.body) + '"></span></div>'
+    + '<div class="kv"><span class="k">情绪</span><span class="v"><input class="f" data-list="ledger.people" data-i="' + i + '" data-k="mood" value="' + esc(p.mood) + '"></span></div>'
+    + '<div class="kv"><span class="k">目标</span><span class="v"><input class="f" data-list="ledger.people" data-i="' + i + '" data-k="goal" value="' + esc(p.goal) + '"></span></div>'
+    + '<div class="kv"><span class="k">随身</span><span class="v"><textarea class="f" rows="2" data-lines="ledger.people.' + i + '.items">' + esc(arr(p.items).join('\n')) + '</textarea></span></div>'
+    + '<div class="kv"><span class="k">已知</span><span class="v"><textarea class="f" rows="3" data-lines="ledger.people.' + i + '.knows">' + esc(arr(p.knows).join('\n')) + '</textarea></span></div>'
+    + '<div class="kv"><span class="k">不知道</span><span class="v"><textarea class="f" rows="3" data-lines="ledger.people.' + i + '.unaware">' + esc(arr(p.unaware).join('\n')) + '</textarea></span></div>'
+    + '</div>').join('') : '<div class="empty" style="padding:16px">还没有人物状态。<br>AI 写第一段时会自动填，也可以自己先加。</div>';
+
+  const ts = BOOK.ledger.threads || [];
+  $('#threads').innerHTML = ts.length ? ts.map((t, i) =>
+    '<div class="card"><div class="row"><input class="f grow" data-list="ledger.threads" data-i="' + i + '" data-k="name" value="' + esc(t.name) + '" placeholder="伏笔名">'
+    + '<select class="f" style="width:auto" data-list="ledger.threads" data-i="' + i + '" data-k="state">'
+    + '<option' + (t.state === '已埋' ? ' selected' : '') + '>已埋</option><option' + (t.state === '已回收' ? ' selected' : '') + '>已回收</option></select>'
+    + '<button class="btn sm" data-act="delthread" data-i="' + i + '">删</button></div>'
+    + '<input class="f" style="margin-top:7px" data-list="ledger.threads" data-i="' + i + '" data-k="note" value="' + esc(t.note) + '" placeholder="一句话备注"></div>').join('')
+    : '<div class="empty" style="padding:14px">还没有伏笔。</div>';
+
+  const pr = BOOK.ledger.props || [];
+  $('#props').innerHTML = pr.length ? pr.map((p, i) =>
+    '<div class="card"><div class="row"><input class="f grow" data-list="ledger.props" data-i="' + i + '" data-k="name" value="' + esc(p.name) + '" placeholder="道具名">'
+    + '<button class="btn sm" data-act="delprop" data-i="' + i + '">删</button></div>'
+    + '<div class="row" style="margin-top:7px"><input class="f" data-list="ledger.props" data-i="' + i + '" data-k="holder" value="' + esc(p.holder) + '" placeholder="在谁手上">'
+    + '<input class="f" data-list="ledger.props" data-i="' + i + '" data-k="note" value="' + esc(p.note) + '" placeholder="状态"></div></div>').join('')
+    : '<div class="empty" style="padding:14px">还没有道具。</div>';
+
+  const d = BOOK.dice.last;
+  $('#diceLast').innerHTML = d
+    ? '<div class="kv"><span class="k">' + esc(d.table) + '</span><span class="v">第 ' + d.face + ' 号 · ' + esc(d.label) + '　<span class="tag b">' + esc(d.desc || '') + '</span></span></div>'
+    : '<div class="mut">还没掷过。文稿页点「🎲 掷骰」。</div>';
+}
+function linesEditor(path, val, rows, ph) {
+  return '<textarea class="f" rows="' + (rows || 3) + '" data-lines="' + path + '" placeholder="' + esc(ph || '一行一条') + '">' + esc(arr(val).join('\n')) + '</textarea>';
+}
+function renderGodCfg() {
+  const d = DIR();
+  const sel = (k, list, label) => '<label class="lab"><b>' + label + '</b></label><select class="f" data-dir="' + k + '">'
+    + list.map((x, i) => '<option value="' + i + '"' + (d[k] === i ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>';
+  $('#godCfg').innerHTML = '<div class="card">'
+    + '<div class="row"><b class="grow">幕后块注入</b>'
+    + '<button class="mini" data-act="godon">' + (godOn() ? '已开启' : '已关闭') + '</button></div>'
+    + '<div class="mut" style="margin-top:5px">开启时每段多输出一个幕后块（真相/伏笔/它能想到的后续/风险）。关掉可以省一些输出 token，但你就看不到 AI 想加的情节了。</div>'
+    + sel('pace', PACES, '节奏')
+    + sel('emotion', EMOTIONS, '情感强度')
+    + sel('surprise', SURPRISE, '意外性')
+    + '<label class="lab"><b>主题焦点</b>（留空则不限定）</label><input class="f" data-dir="theme" value="' + esc(d.theme) + '" placeholder="例：信任与背叛 / 代价 / 归乡">'
+    + '<label class="lab"><b>长期笔记</b>（每段都发，优先级很高）</label><textarea class="f" rows="3" data-dir="note" placeholder="例：对话不要用「他说」以外的提示语；不要写景超过三句。">' + esc(d.note) + '</textarea>'
+    + '</div>'
+    + '<div class="card">'
+    + '<div class="mut">硬性事实（最高优先级，一行一条）</div>'
+    + '<textarea class="f" rows="3" style="margin-top:6px" data-lines="facts" placeholder="例：格里昂从未对任何人说过自己的来历。">' + esc(factsOf().join('\n')) + '</textarea>'
+    + '</div>';
+}
+function renderGod() {
+  renderGodCfg();
+  const g = BOOK.god || {};
+  $('#godBody').innerHTML =
+    '<div class="card"><div class="mut">隐情 / 真相</div><textarea class="f" rows="3" data-bind="god.truth" style="margin-top:6px">' + esc(g.truth) + '</textarea></div>'
+    + '<div class="card"><div class="mut">你看不见的地方正在发生什么</div>' + linesEditor('god.agenda', g.agenda, 4) + '</div>'
+    + '<div class="card"><div class="mut">已埋下的伏笔</div>' + linesEditor('god.foreshadow', g.foreshadow, 4) + '</div>'
+    + '<div class="card"><div class="mut">如果什么都不安排，事情会往哪走</div><textarea class="f" rows="3" data-bind="god.if_inaction">' + esc(g.if_inaction) + '</textarea></div>'
+    + '<div class="card"><div class="mut">它能想到的后续（AI 想加但没写进正文的情节，挑着用）</div>'
+    + (arr(g.hooks).length ? arr(g.hooks).map((h, i) =>
+        '<div class="row" style="margin-top:8px"><input class="f" style="width:34%" data-hook="' + i + '" data-k="label" value="' + esc(h.label) + '" placeholder="标题">'
+        + '<input class="f grow" data-hook="' + i + '" data-k="desc" value="' + esc(h.desc) + '" placeholder="一句话">'
+        + '<button class="mini" data-hop="' + i + '">＋ 入故事板</button></div>').join('')
+      : '<div class="mut" style="margin-top:6px">（还没有）</div>')
+    + '</div>'
+    + '<div class="card"><div class="mut">可能的问题（时间对不上、人物不合理、与前文冲突）</div>' + linesEditor('god.risks', g.risks, 4) + '</div>';
+}
+function renderSetup() {
+  const n = BOOK.narr;
+  $('#setupBody').innerHTML =
+    '<div class="card"><div class="mut">这里只放「每段都带」的东西。长篇设定（地点、势力、历史、物品…）请去 <b>世界书</b>，人物去 <b>人物</b>——那些是按需调用的。</div>'
+    + '<label class="lab" style="margin-top:10px"><b>书名</b></label><input class="f" data-bind="title" value="' + esc(BOOK.title) + '"></div>'
+    + god2(n);
+}
+function god2(n) {
+  const opt = (list, v) => list.map(x => '<option' + (x === v ? ' selected' : '') + '>' + esc(x) + '</option>').join('');
+  return '<div class="card"><div class="mut">叙事与文风</div>'
+    + '<label class="lab"><b>人称</b></label><select class="f" data-bind="narr.person">' + opt(PERSONS, n.person) + '</select>'
+    + '<label class="lab"><b>文风语体</b></label><select class="f" data-bind="narr.style">' + opt(Object.keys(STYLE_RULES), n.style) + '</select>'
+    + '<div class="mut" id="styleHint" style="margin-top:5px">' + esc(styleRuleOf(n.style).hint) + '</div>'
+    + '<label class="lab"><b>内容尺度</b></label><select class="f" data-bind="narr.scale">' + opt(Object.keys(SCALE_RULES), n.scale) + '</select>'
+    + '<div class="mut" id="scaleHint" style="margin-top:5px">' + esc(scaleHintOf(n.scale)) + '</div>'
+    + '<label class="lab"><b>描写侧重</b></label><select class="f" data-bind="narr.focus">' + opt(FOCUSES, n.focus) + '</select>'
+    + '<label class="lab"><b>真实感与后果</b></label><select class="f" data-bind="narr.realism">'
+    + '<option value="1"' + (n.realism !== false ? ' selected' : '') + '>开启（后果不可撤、伤会留疤、钱会花完）</option>'
+    + '<option value="0"' + (n.realism === false ? ' selected' : '') + '>关闭</option></select>'
+    + '<label class="lab"><b>额外要求</b>（原样进提示词）</label><textarea class="f" rows="4" data-bind="narr.rules" placeholder="例：多写感官细节；对话不要用「他说」以外的提示语。">' + esc(n.rules) + '</textarea>'
+    + '<label class="lab"><b>禁止出现</b>（原样进提示词，优先于尺度）</label><textarea class="f" rows="3" data-bind="narr.bans" placeholder="例：不出现现代科技词汇。">' + esc(n.bans) + '</textarea></div>';
+}
+function renderApi() {
+  $('#cfgApiUrl').value = CFG.apiUrl || '';
+  $('#cfgApiKey').value = CFG.apiKey || '';
+  $('#cfgModel').value = CFG.model || '';
+  $('#cfgTemp').value = typeof CFG.temp === 'number' ? CFG.temp : 0.9;
+  $('#cfgExtra').value = CFG.extra || '';
+  $('#cfgLen').value = CFG.len || 800;
+  $('#cfgStream').value = CFG.stream === false ? '0' : '1';
+  const sel = $('#cfgThink');
+  if (!sel.options.length) sel.innerHTML = THINK_MODES.map(m => '<option value="' + m.key + '">' + esc(m.label) + '</option>').join('');
+  sel.value = CFG.think || 'off';
+  const u = load(USAGE_KEY, null);
+  const bk = BOOK.stats || { prompt: 0, completion: 0, cached: 0, calls: 0 };
+  const sb = $('#statsBox');
+  if (sb) sb.innerHTML = '<b>本书</b>：' + usageLine(bk) + '<br><b>这台设备</b>：' + usageLine(u);
+  if ($('#btnStats')) $('#btnStats').onclick = () => openStats();
+}
+function renderAll() { renderTop(); renderBoard(); renderDoc(); renderPeople(); renderCodex(); renderGod(); renderSetup(); renderLook(); renderApi(); }
+
+/* ============================================================================
+   交互
+   ============================================================================ */
+document.addEventListener('click', e => {
+  const lb = e.target.closest('[data-look]');
+  if (lb && (lb.tagName === 'BUTTON' || lb.type === 'radio')) { setLook(lb, true); return; }
+  const el = e.target.closest('[data-act]');
+  if (el) {
+    const a = el.dataset.act, i = +el.dataset.i, j = +el.dataset.j;
+    if (a === 'goSetup') return show('setup');
+    if (a === 'godon') {
+      CFG.godOn = !godOn(); saveCfg(); renderGod();
+      toast(CFG.godOn ? '幕后块：开启——每段都会输出真相/伏笔/它能想到的后续' : '幕后块：关闭——省输出 token，但你看不到 AI 想加的情节了');
+      return;
+    }
+    if (a === 'lookTheme') { LOOK.theme = el.dataset.v; saveLook(); applyLook(); renderLook(); return; }
+    if (a === 'goCodex') return show('codex');
+    if (a === 'goPeople') return show('people');
+    if (a === 'importWorld') return pickFile(worldPick, importWorldFile);
+    if (a === 'presets') return openPreset();
+    if (a === 'pin') {
+      const list = el.dataset.kind === 'card' ? BOOK.cards : BOOK.codex;
+      const it = list[i]; if (!it) return;
+      it.always = !it.always; save(); renderCodex(); renderPeople();
+      toast(it.always ? '「' + clean(it.name) + '」改成常驻：以后每段都会带' : '「' + clean(it.name) + '」改成按需调用');
+      return;
+    }
+    if (a === 'delcard') { if (!window.confirm('删掉这张人物卡？（他的当前状态会留着）')) return; BOOK.cards.splice(i, 1); save(); renderPeople(); return; }
+    if (a === 'delcodex') { if (!window.confirm('删掉这条设定？')) return; BOOK.codex.splice(i, 1); save(); renderCodex(); return; }
+    if (a === 'mkcard') { BOOK.cards.push({ id: uid(), name: el.dataset.name || '', role: '', look: '', persona: '', back: '', goal: '', secret: '', voice: '', always: false }); save(); renderPeople(); return; }
+    if (a === 'mkstate') { BOOK.ledger.people.push({ name: el.dataset.name || '', role: '', where: '', body: '', mood: '', goal: '', items: [], knows: [], unaware: [] }); save(); renderPeople(); return; }
+    if (a === 'expand') {
+      const c = BOOK.chapters[i], b = c.beats[j];
+      if (!clean(b.text)) { toast('这条 beat 还是空的，先写点什么'); return; }
+      BOOK.cursor = { chapterId: c.id, beatId: b.id }; save(); renderAll(); show('doc');
+      toast('已切到这段，点「再写一段」开始');
+      return;
+    }
+    if (a === 'addbeat') { BOOK.chapters[i].beats.push({ id: uid(), text: '', state: '' }); save(); renderBoard(); focusLastBeat(i); return; }
+    if (a === 'delbeat') { BOOK.chapters[i].beats.splice(j, 1); save(); renderBoard(); return; }
+    if (a === 'delchapter') { if (!window.confirm('删掉这一章和里面的 beat？')) return; BOOK.chapters.splice(i, 1); save(); renderAll(); return; }
+    if (a === 'togglebeat') {
+      const b = BOOK.chapters[i].beats[j];
+      b.state = b.state === 'done' ? '' : 'done';
+      if (b.state === 'done' && BOOK.cursor.beatId === b.id) BOOK.cursor.beatId = '';
+      save(); renderBoard(); return;
+    }
+    if (a === 'editpara') return editPara(i);
+    if (a === 'donepara') { const p = BOOK.paras[i]; p.state = p.state === 'draft' ? 'done' : 'draft'; save(); renderDoc(); return; }
+    if (a === 'delpara') { if (!window.confirm('删掉这一段？')) return; BOOK.paras.splice(i, 1); save(); renderAll(); return; }
+    if (a === 'cleardice') { BOOK.dice.pending = null; save(); renderDoc(); return; }
+    if (a === 'delperson') { BOOK.ledger.people.splice(i, 1); save(); renderLedger(); return; }
+    if (a === 'delthread') { BOOK.ledger.threads.splice(i, 1); save(); renderLedger(); return; }
+    if (a === 'delprop') { BOOK.ledger.props.splice(i, 1); save(); renderLedger(); return; }
+  }
+  const hb = e.target.closest('[data-hop]');
+  if (hb) {
+    const k = +hb.dataset.hop, h = BOOK.god.hooks[k];
+    if (!h) return;
+    BOOK.chapters.push({ id: uid(), title: clean(h.label) || '新章', beats: [{ id: uid(), text: clean(h.desc) || clean(h.label), state: '' }] });
+    save(); renderAll(); show('board'); toast('已作为新章节加进故事板');
+    return;
+  }
+});
+function focusLastBeat(i) {
+  const list = $$('#chapters .chap')[i];
+  if (!list) return;
+  const tas = list.querySelectorAll('.beat .txt');
+  const t = tas[tas.length - 1];
+  if (t) t.focus();
+}
+function editPara(i) {
+  const p = BOOK.paras[i];
+  const el = $('.para[data-pid="' + p.id + '"]');
+  if (!el) return;
+  el.innerHTML = '<div class="meta"><span class="pov">' + esc(p.pov || '未设视点') + '</span><span class="st">编辑中</span></div>'
+    + '<textarea class="edit"></textarea>'
+    + '<div class="tools"><button class="mini" data-act2="save">保存</button><button class="mini" data-act2="cancel">取消</button></div>';
+  const ta = el.querySelector('textarea'); ta.value = p.text; ta.focus();
+  el.querySelector('[data-act2="save"]').onclick = () => { p.text = ta.value; save(); renderAll(); toast('改好了（下次续写会吃你改过的版本）'); };
+  el.querySelector('[data-act2="cancel"]').onclick = () => renderDoc();
+}
+
+/* 外观控件：输入过程中**不能重绘**，否则打字到一半输入框就失去焦点了 */
+function setLook(el, rerender) {
+  const k = el.dataset.look;
+  const v = (el.dataset.v !== undefined) ? el.dataset.v : el.value;
+  LOOK[k] = (['tx', 'lh', 'maxw', 'ui'].indexOf(k) >= 0) ? (+v || 0) : v;
+  saveLook();
+  if (k === 'bgimg') {   /* 背景图地址要打完再加载，不然每敲一个字母都去请求一次 */
+    clearTimeout(window.__bgT);
+    window.__bgT = setTimeout(() => applyLook(), 500);
+    return;
+  }
+  applyLook();
+  const lab = $('#lab_' + k); if (lab) lab.textContent = LOOK[k];
+  if (rerender) renderLook();
+}
+
+/* 输入绑定：简单字段 / 数组字段 / 列表字段 */
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.look) { setLook(t, false); return; }
+  if (t.dataset.dir) {
+    const k = t.dataset.dir;
+    DIR()[k] = (k === 'pace' || k === 'emotion' || k === 'surprise') ? (+t.value || 0) : t.value;
+    save(); return;
+  }
+  if (t.dataset.bind) {
+    let v = t.value;
+    if (t.dataset.bind === 'narr.realism') v = v === '1';
+    setByPath(BOOK, t.dataset.bind, v);
+    if (t.dataset.bind === 'title') renderTop();
+    if (t.dataset.bind === 'narr.style' || t.dataset.bind === 'narr.scale') {
+      const h = t.dataset.bind === 'narr.style' ? $('#styleHint') : $('#scaleHint');
+      if (h) h.textContent = t.dataset.bind === 'narr.style' ? styleRuleOf(v).hint : scaleHintOf(v);
+    }
+    save(); return;
+  }
+  if (t.dataset.lines) {
+    const raw = t.value.split('\n').map(clean).filter(Boolean);
+    const path = t.dataset.lines;
+    /* 设定页那三个「一行一条」的字段写成 xxxText，提交时再拆成对象 */
+    const m = /^ledger\.people\.(\d+)\.(\w+)$/.exec(path);
+    if (m) { BOOK.ledger.people[+m[1]][m[2]] = raw; save(); return; }
+    if (path === 'world.factionsText') { BOOK.world.factions = raw.map(s => { const a = s.split('|').map(clean); return { name: a[0] || '', stance: a[1] || '', goal: a[2] || '', relation: a[3] || '' }; }); save(); return; }
+    if (path === 'world.placesText') { BOOK.world.places = raw.map(s => { const a = s.split('|').map(clean); return { name: a[0] || '', desc: a[1] || '' }; }); save(); return; }
+    if (path === 'world.npcsText') { BOOK.world.npcs = raw.map(s => { const a = s.split('|').map(clean); return { name: a[0] || '', role: a[1] || '', motive: a[2] || '', relation: a[3] || '' }; }); save(); return; }
+    if (path === 'facts') { BOOK.facts = raw; save(); return; }
+    setByPath(BOOK, path, raw); save(); return;
+  }
+  if (t.dataset.card != null && t.dataset.card !== '') {
+    const c = BOOK.cards[+t.dataset.card];
+    if (c) { c[t.dataset.k] = t.value; save(); }
+    return;
+  }
+  if (t.dataset.codex != null && t.dataset.codex !== '') {
+    const e = BOOK.codex[+t.dataset.codex];
+    if (!e) return;
+    if (t.dataset.k === 'keys') e.keys = t.value.split(/[、,，]/).map(clean).filter(Boolean);
+    else e[t.dataset.k] = t.value;
+    save();
+    if (t.dataset.k === 'name' || t.dataset.k === 'keys') clearTimeout(window.__pickT), window.__pickT = setTimeout(() => { const h = $('#pickHint'); if (h) { const s = currentSelection(); h.innerHTML = '按当前 beat 与视点人物估一下，下一段会带：<b>' + esc(s.codexList.map(r => r.e.name).join('、') || '（无）') + '</b>　＋人物卡：<b>' + esc(s.cardList.map(r => r.c.name).join('、') || '（无）') + '</b>'; } }, 350);
+    return;
+  }
+  if (t.dataset.list) {   /* ledger.people / threads / props 的单项字段 */
+    const m = /^ledger\.(\w+)$/.exec(t.dataset.list);
+    if (!m) return;
+    const item = BOOK.ledger[m[1]][+t.dataset.i];
+    if (item) { item[t.dataset.k] = t.value; save(); }
+    return;
+  }
+  if (t.dataset.hook != null && t.dataset.hook !== '') {
+    const h = BOOK.god.hooks[+t.dataset.hook];
+    if (h) { h[t.dataset.k] = t.value; save(); }
+    return;
+  }
+});
+
+/* 顶栏 / 底栏 */
+$$('#tabs button').forEach(b => b.onclick = () => show(b.dataset.v));
+$('#btnWriteDir').onclick = () => {
+  const t = $('#dirBox') ? clean($('#dirBox').value) : '';
+  if (!t) { toast('先写一句这一段要发生什么；只想顺下去就点「顺写」'); return; }
+  writePara();
+};
+$('#btnWriteFree').onclick = () => { if ($('#dirBox')) $('#dirBox').value = ''; writePara(); };
+$('#btnDirToBoard').onclick = () => {
+  const t = $('#dirBox') ? clean($('#dirBox').value) : '';
+  if (!t) { toast('先写点什么'); return; }
+  if (!BOOK.chapters.length) BOOK.chapters.push({ id: uid(), title: '第 1 章', beats: [] });
+  const c = curChapter();
+  c.beats.push({ id: uid(), text: t, state: '' });
+  BOOK.cursor = { chapterId: c.id, beatId: c.beats[c.beats.length - 1].id };
+  $('#dirBox').value = '';
+  save(); renderAll(); toast('已存进故事板：' + t.slice(0, 20));
+};
+$('#btnViewpoint').onclick = () => openViewpoint();
+if ($('#dirBox')) {
+  $('#dirBox').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#btnWriteDir').click(); }
+  });
+}
+function allNames() {
+  const out = [];
+  BOOK.cards.forEach(c => { if (clean(c.name) && out.indexOf(clean(c.name)) < 0) out.push(clean(c.name)); });
+  (BOOK.ledger.people || []).forEach(p => { if (clean(p.name) && out.indexOf(clean(p.name)) < 0) out.push(clean(p.name)); });
+  return out;
+}
+function openViewpoint() {
+  const names = allNames();
+  const last = BOOK.paras.slice(-1)[0];
+  const person = BOOK.narr.person, pov = curPov();
+  openSheet('<button class="close" data-x="1">✕</button><h3>👁 视点</h3>'
+    + '<div class="mut" style="margin-top:6px">这一段用谁的眼睛讲故事。人称与视点人物是两件事，分开设。</div>'
+    + '<label class="lab"><b>人称</b></label><div class="row wrap">'
+    + PERSONS.map(x => '<button class="btn sm" data-vpx="person" data-v="' + esc(x) + '" style="' + (x === person ? 'border-color:var(--acc);color:var(--acc)' : '') + '">' + esc(x) + '</button>').join('') + '</div>'
+    + '<label class="lab"><b>视点人物</b></label><div class="row wrap">'
+    + (names.length ? names.map(n => '<button class="btn sm" data-vpx="pov" data-v="' + esc(n) + '" style="' + (n === pov ? 'border-color:var(--acc);color:var(--acc)' : '') + '">' + esc(n) + '</button>').join('')
+      : '<span class="mut">还没有人物卡，先去「人物」建一个</span>') + '</div>'
+    + '<div class="card" style="margin-top:12px"><div class="mut">上一段用的是：<b>' + (last ? esc(last.pov || '未设') : '（还没写过）') + '</b>'
+    + (last && last.pov && last.pov !== pov ? '<br><b style="color:var(--acc)">注意：和当前视点不一样，往下写就是切视角了。</b>' : '') + '</div></div>');
+  $('#sheetPanel').onclick = ev => {
+    const el = ev.target.closest('[data-vpx],[data-x]'); if (!el) return;
+    if (el.dataset.x === '1') return closeSheet();
+    const v = el.dataset.v;
+    if (el.dataset.vpx === 'person') { BOOK.narr.person = v; save(); toast('人称改成：' + v); }
+    if (el.dataset.vpx === 'pov') { BOOK.narr.pov = v; BOOK.ledger.pov = v; save(); toast('这一段换成 ' + v + ' 的视角'); }
+    renderDoc(); renderPeople(); closeSheet();
+  };
+}
+$('#btnRewrite').onclick = () => rewriteLast();
+$('#btnManual').onclick = () => {
+  const p = { id: uid(), beatId: (curBeat() || {}).id || '', pov: curPov(), text: '', state: 'draft' };
+  BOOK.paras.push(p); save(); renderDoc(); show('doc');
+  editPara(BOOK.paras.length - 1);
+};
+$('#btnStop').onclick = () => { genState.stop = true; toast('会在这一轮结束后停下'); };
+
+$('#main').addEventListener('change', e => {
+  if (e.target.id === 'povPick') { BOOK.narr.pov = e.target.value; BOOK.ledger.pov = e.target.value; save(); toast('视点切到 ' + (e.target.value || '未设')); }
+  const t = e.target;
+  if (t.dataset.list) { const m = /^ledger\.(\w+)$/.exec(t.dataset.list); if (m) { const it = BOOK.ledger[m[1]][+t.dataset.i]; if (it) { it[t.dataset.k] = t.value; save(); } } }
+  if (t.dataset.card != null && t.dataset.card !== '') { const c = BOOK.cards[+t.dataset.card]; if (c) { c[t.dataset.k] = t.value; save(); } }
+  if (t.dataset.look && t.tagName === 'SELECT') renderLook();
+  if (t.dataset.look && t.dataset.look !== 'bgimg' && t.type === 'color') { applyLook(); }
+});
+
+$('#btnAddChapter').onclick = () => {
+  BOOK.chapters.push({ id: uid(), title: '第 ' + (BOOK.chapters.length + 1) + ' 章', beats: [{ id: uid(), text: '', state: '' }] });
+  save(); renderAll(); show('board'); focusLastBeat(BOOK.chapters.length - 1);
+};
+$('#btnAddCard').onclick = () => { BOOK.cards.push({ id: uid(), name: '', role: '', look: '', persona: '', back: '', goal: '', secret: '', voice: '', always: false }); save(); renderPeople(); show('people'); };
+$('#btnAddCodex').onclick = () => {
+  BOOK.codex.unshift({ id: uid(), kind: $('#codexKind').value === 'all' ? '其他' : $('#codexKind').value, name: '', keys: [], body: '', always: false });
+  save(); renderCodex(); show('codex');
+  const ta = $('#codexView input[data-k="name"]'); if (ta) ta.focus();
+};
+$('#codexKind').onchange = () => renderCodex();
+$('#codexSearch').oninput = () => renderCodex();
+$('#cfgPick').onchange = e => { CFG.pick = e.target.value; saveCfg(); toast(CFG.pick === 'ai' ? '已改成「让 AI 自己挑」：每段会多花一次小请求' : '已改成「本地命中」：免费、可预期'); renderCodex(); };
+$('#povTop').onchange = e => { BOOK.narr.pov = e.target.value; BOOK.ledger.pov = e.target.value; save(); renderDoc(); toast('视点切到 ' + (e.target.value || '未设')); };
+$('#btnAddThread').onclick = () => { BOOK.ledger.threads.push({ name: '', state: '已埋', note: '' }); save(); renderCodex(); };
+$('#btnAddProp').onclick = () => { BOOK.ledger.props.push({ name: '', holder: '', note: '' }); save(); renderCodex(); };
+$('#quickIdea').oninput = e => { localStorage.setItem('inkhall.quick', e.target.value); };
+$('#quickIdea').value = localStorage.getItem('inkhall.quick') || '';
+$('#btnQuickAdd').onclick = () => {
+  const t = clean($('#quickIdea').value);
+  if (!t) { toast('先写点什么'); return; }
+  if ($('#quickKind').value === 'chapter') BOOK.chapters.push({ id: uid(), title: t.slice(0, 24), beats: [{ id: uid(), text: '', state: '' }] });
+  else {
+    if (!BOOK.chapters.length) BOOK.chapters.push({ id: uid(), title: '第 1 章', beats: [] });
+    const c = curChapter();
+    c.beats.push({ id: uid(), text: t, state: '' });
+    if (!BOOK.cursor.chapterId) BOOK.cursor = { chapterId: c.id, beatId: c.beats[c.beats.length - 1].id };
+  }
+  $('#quickIdea').value = ''; localStorage.removeItem('inkhall.quick');
+  save(); renderAll(); toast('加好了');
+};
+
+/* 骰子 */
+$('#btnDice').onclick = () => openDice();
+function openDice() {
+  const tbl = BOOK.dice.table || DICE_DEFAULT;
+  openSheet('<button class="close" data-x="1">✕</button><h3>🎲 事件骰表</h3>'
+    + '<div class="mut" style="margin-top:6px">掷出来的结果会当成硬约束，写进下一段的提示词。含义由你定，AI 只负责照做。</div>'
+    + '<div style="margin-top:12px">' + tbl.map((f, i) =>
+      '<div class="row" style="margin-bottom:7px"><span class="tag" style="min-width:34px;text-align:center">' + f.face + '</span>'
+      + '<input class="f" style="width:32%" data-face="' + i + '" data-k="label" value="' + esc(f.label) + '">'
+      + '<input class="f grow" data-face="' + i + '" data-k="desc" value="' + esc(f.desc || '') + '"></div>').join('') + '</div>'
+    + '<div class="row" style="margin-top:14px"><button class="btn pri grow" data-x="roll">🎲 掷一次</button></div>'
+    + '<div id="rollOut" class="mut" style="margin-top:10px"></div>', () => {
+      $('#sheetPanel').addEventListener('input', ev => {
+        const t = ev.target;
+        if (t.dataset.face != null && t.dataset.face !== '') { tbl[+t.dataset.face][t.dataset.k] = t.value; save(); }
+      });
+    });
+  $('#sheetPanel').onclick = ev => {
+    const el = ev.target.closest('[data-x]'); if (!el) return;
+    if (el.dataset.x === '1') return closeSheet();
+    if (el.dataset.x === 'roll') {
+      const f = tbl[Math.floor(Math.random() * tbl.length)];
+      $('#rollOut').innerHTML = '掷出 <b style="color:var(--acc);font-size:19px">' + f.face + '</b> · <b>' + esc(f.label) + '</b><br>' + esc(f.desc || '')
+        + '<div class="row" style="margin-top:10px"><button class="btn pri" data-x="take">用这个结果</button>'
+        + '<button class="btn" data-x="roll">再掷一次</button></div>';
+      $('#rollOut').dataset.face = f.face;
+    }
+    if (el.dataset.x === 'take') {
+      const face = +$('#rollOut').dataset.face;
+      const f = tbl.filter(x => x.face === face)[0] || tbl[0];
+      BOOK.dice.pending = { table: '事件骰', face: f.face, label: f.label, desc: f.desc || '' };
+      save(); renderDoc(); closeSheet(); toast('已挂上：' + f.label + '（下一段会朝这个方向写）');
+    }
+  };
+}
+
+/* 菜单 */
+function openMenu() {
+  openSheet('<button class="close" data-x="1">✕</button><h3>菜单</h3>'
+  + '<div class="row wrap" style="margin-top:12px">'
+  + '<button class="btn" data-x="setup">🌍 世界设定</button>'
+  + '<button class="btn" data-x="api">🔌 接口设置</button>'
+  + '<button class="btn" data-x="look">🎨 外观</button>'
+  + '<button class="btn" data-x="stats">📊 运行与统计</button>'
+  + '<button class="btn" data-x="importBook">⬆ 导入全书备份</button>'
+  + '<button class="btn" data-x="exportBook">⬇ 导出全书备份（JSON）</button>'
+  + '<button class="btn" data-x="exportMd">📄 导出成稿（.txt）</button>'
+  + '<button class="btn" data-x="copy">📋 复制全文</button>'
+  + '<button class="btn" data-x="newbook">🧹 清空重来</button>'
+  + '</div><div class="mut" style="margin-top:12px">全书备份含大纲、账本、幕后与正文；导出成稿只有正文。</div>');
+  $('#sheetPanel').onclick = ev => {
+    const el = ev.target.closest('[data-x]'); if (!el) return;
+    const x = el.dataset.x;
+    if (x === '1') return closeSheet();
+    closeSheet();
+    if (x === 'setup') return show('setup');
+    if (x === 'api') return show('api');
+    if (x === 'look') return show('look');
+    if (x === 'stats') return openStats();
+    if (x === 'exportBook') return download((clean(BOOK.title) || '长夜') + '-全书备份.json', JSON.stringify(BOOK, null, 1), 'application/json');
+    if (x === 'exportMd') return download((clean(BOOK.title) || '长夜') + '.txt', manuscript(), 'text/plain');
+    if (x === 'copy') { navigator.clipboard.writeText(manuscript()).then(() => toast('全文已复制'), () => toast('复制失败，试试导出文件')); return; }
+    if (x === 'newbook') { if (window.confirm('清空全部内容（大纲、正文、账本、幕后）？此操作不可撤销，建议先导出备份。')) { BOOK = newBook(); save(); renderAll(); show('board'); } return; }
+    if (x === 'importBook') { pickFile(bookPick, importBookFile); return; }
+  };
+}
+$('#btnMenu').onclick = () => openMenu();
+function importBookFile(f) {
+  readText(f, t => {
+    try {
+      const d = JSON.parse(t);
+      if (!d || !d.paras) throw new Error('不是全书备份');
+      BOOK = d; save(); renderAll(); show('doc'); toast('✅ 已载入全书备份');
+    } catch (err) { toast('导入失败：' + err.message); }
+  });
+}
+
+function manuscript() {
+  const out = [];
+  out.push(clean(BOOK.title) || '未命名');
+  out.push('');
+  /* 段落记着 beatId，beat 属于章节 → 可以按章节把标题插在正确的位置 */
+  const chapOfBeat = {};
+  BOOK.chapters.forEach((c, i) => (c.beats || []).forEach(b => { chapOfBeat[b.id] = i; }));
+  let last = -1;
+  BOOK.paras.forEach(p => {
+    const ci = (p.beatId && chapOfBeat[p.beatId] != null) ? chapOfBeat[p.beatId] : -1;
+    if (ci >= 0 && ci !== last) {
+      out.push('', '—— ' + (clean(BOOK.chapters[ci].title) || ('第 ' + (ci + 1) + ' 章')) + ' ——', '');
+      last = ci;
+    }
+    out.push(clean(p.text), '');
+  });
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+function download(name, text, type) {
+  const blob = new Blob([text], { type: (type || 'text/plain') + ';charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('已导出：' + name);
+}
+
+/* 世界设定导入 / 导出（吃 Talehall 的设定 JSON） */
+$('#btnImportWorld').onclick = () => pickFile(worldPick, importWorldFile);
+function importWorldFile(f) {
+  readText(f, txt => {
+    try {
+      const d = JSON.parse(txt);
+      if (d && d.world && d.paras) { BOOK = d; save(); renderAll(); toast('✅ 全书备份已导入'); return; }
+      if (!d || typeof d !== 'object') throw new Error('不是 JSON');
+      if (!clean(d.title) && !clean(d.name) && !arr(d.places).length) throw new Error('这看起来不是设定文件');
+      if (!window.confirm('导入这份设定？\n\n会重建世界核心、世界书条目与人物卡，并换掉当前的正文与大纲。')) return;
+      BOOK = presetToBook(d);
+      save(); renderAll(); show('board');
+      toast('✅ 已导入：' + (clean(d.title) || '无名') + '（世界书 ' + BOOK.codex.length + ' 条 · 人物卡 ' + BOOK.cards.length + ' 张）', 5200);
+    } catch (err) { toast('导入失败：' + err.message); }
+  });
+}
+$('#btnExportWorld').onclick = () => download((clean(BOOK.world.title) || '世界') + '-设定.json', JSON.stringify(Object.assign({}, BOOK.world, {
+  style: BOOK.narr.style, scale: BOOK.narr.scale, person: BOOK.narr.person,
+  places: BOOK.codex.filter(e => e.kind === '地理与地点').map(e => ({ name: e.name, desc: e.body })),
+  npcs: BOOK.cards.map(c => ({ name: c.name, role: c.role, motive: c.goal, relation: c.back })),
+}), null, 1), 'application/json');
+
+/* 接口页绑定 */
+$('#btnModels').onclick = () => fetchModels();
+$('#btnTest').onclick = () => testConn();
+['cfgApiUrl', 'cfgApiKey', 'cfgModel', 'cfgTemp', 'cfgExtra', 'cfgLen'].forEach(id => {
+  $('#' + id).oninput = e => {
+    const k = { cfgApiUrl: 'apiUrl', cfgApiKey: 'apiKey', cfgModel: 'model', cfgTemp: 'temp', cfgExtra: 'extra', cfgLen: 'len' }[id];
+    CFG[k] = (k === 'temp' || k === 'len') ? (+e.target.value || 0) : e.target.value;
+    saveCfg();
+  };
+});
+$('#cfgStream').onchange = e => { CFG.stream = e.target.value === '1'; saveCfg(); };
+$('#cfgThink').onchange = e => { CFG.think = e.target.value; saveCfg(); };
+
+/* ============================================================================
+   启动
+   ============================================================================ */
+(function init() {
+  const cfg = load(K.cfg, null); if (cfg) CFG = Object.assign(CFG, cfg);
+  const lk = load('inkhall.look', null); if (lk) LOOK = Object.assign(LOOK, lk);
+  applyLook();
+  const bk = load(K.book, null);
+  BOOK = bk || presetToBook(PRESETS[0]);            /* 开局不空白：默认就是旗舰预设 */
+  if (!BOOK.ledger) BOOK.ledger = newBook().ledger;
+  if (!BOOK.god) BOOK.god = newBook().god;
+  if (!Array.isArray(BOOK.cards)) BOOK.cards = [];
+  if (!Array.isArray(BOOK.codex)) BOOK.codex = [];
+  if (!Array.isArray(BOOK.facts)) BOOK.facts = [];
+  if (!BOOK.dir || typeof BOOK.dir !== 'object') BOOK.dir = { pace: 3, emotion: 2, surprise: 3, theme: '', note: '' };
+  if (!BOOK.stats) BOOK.stats = { prompt: 0, completion: 0, cached: 0, calls: 0 };
+  if (!BOOK.world || typeof BOOK.world !== 'object') BOOK.world = newBook().world;
+  const W0 = newBook().world;
+  Object.keys(W0).forEach(k => { if (BOOK.world[k] == null) BOOK.world[k] = W0[k]; });
+  if (!BOOK.narr) BOOK.narr = newBook().narr;
+  if (!BOOK.dice || !arr(BOOK.dice.table).length) BOOK.dice = Object.assign(newBook().dice, BOOK.dice && BOOK.dice.last ? { last: BOOK.dice.last } : {});
+  if (!BOOK.cursor) BOOK.cursor = { chapterId: '', beatId: '' };
+  if (!BOOK.chapters.length) {
+    BOOK.chapters.push({ id: uid(), title: '第一章', beats: [{ id: uid(), text: '', state: '' }] });
+    BOOK.cursor = { chapterId: BOOK.chapters[0].id, beatId: BOOK.chapters[0].beats[0].id };
+  }
+  BOOK.chapters.forEach(c => { c.id = c.id || uid(); (c.beats || []).forEach(b => { b.id = b.id || uid(); }); });
+  BOOK.paras.forEach(p => { p.id = p.id || uid(); });
+
+  renderAll(); fillModelsFromCache(); show('board'); save();
+  const pk = $('#cfgPick'); if (pk) pk.value = CFG.pick || 'local';
+  if (!clean(CFG.apiUrl) || !clean(CFG.model)) setTimeout(() => toast('第一次用：先到「☰ 菜单 → 接口设置」填接口地址、Key 和模型名。', 6000), 600);
+  else if (!BOOK.paras.length) setTimeout(() => toast('已经给你装好了「' + clean(BOOK.title) + '」这套预设：去故事板点一条 beat 的「✎ 扩写」就能开写。', 7000), 600);
+})();
+/* ============================================================================
+   PWA：离线壳 + 新版本提醒（file:// 双击打开时整段跳过）
+   ============================================================================ */
+(function pwa() {
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+  const bar = $('#updateBar'), txt = $('#updateText');
+  if ($('#btnUpdateLater')) $('#btnUpdateLater').onclick = () => { bar.hidden = true; };
+  if ($('#btnUpdateNow')) $('#btnUpdateNow').onclick = () => {
+    const reg = window.__swReg;
+    if (reg && reg.waiting) { reg.waiting.postMessage('SKIP_WAITING'); setTimeout(() => location.reload(), 400); }
+    else location.reload();
+  };
+  async function remoteVer() {
+    try {
+      const r = await fetch('sw.js', { cache: 'no-store' });
+      if (!r.ok) return '';
+      const m = /const CACHE = '([^']+)'/.exec(await r.text());
+      return m ? m[1] : '';
+    } catch (e) { return ''; }
+  }
+  async function checkUpdate() {
+    const rv = await remoteVer();
+    if (!rv) return;
+    const seen = localStorage.getItem('inkhall.swVer');
+    /* 第一次装不提示；之后版本变了才提示 */
+    if (seen && seen !== rv && navigator.serviceWorker.controller) {
+      txt.textContent = '⬆ 发现新版本（' + rv + '），刷新后生效';
+      bar.hidden = false;
+    }
+    try { localStorage.setItem('inkhall.swVer', rv); } catch (e) {}
+  }
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+    window.__swReg = reg;
+    setInterval(() => { reg.update().catch(() => {}); }, 15 * 60 * 1000);
+  }).catch(() => {});
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
+  setTimeout(checkUpdate, 2500);
+})();
+
+</script>
+</body>
+</html>
