@@ -364,7 +364,10 @@ body{background-size:cover;background-attachment:fixed;background-position:cente
         <div class="mut">写作设置</div>
         <label class="lab"><b>每段目标字数</b></label>
         <input class="f" id="cfgLen" type="number" min="200" max="4000" step="50">
-        <div class="mut" style="margin-top:6px">不够这个字数时应用会自动接着发请求，直到凑够或连续三次都没进展为止。</div>
+        <label class="lab"><b>单次最大输出 tokens</b></label>
+        <input class="f" id="cfgMaxTok" type="number" min="0" max="32000" step="500">
+        <div class="mut" style="margin-top:6px">字数不够时会自动接着发请求，直到凑够或连续三次都没进展为止。
+          「单次最大输出」是防截断的：给得太小，正文一长就会把后面的状态块挤掉，账本与幕后就不更新了（填 0 表示不发送这个参数；接口报 400 时应用会自动去掉它重试）。</div>
       </div>
     </section>
 
@@ -575,7 +578,7 @@ const DICE_DEFAULT = [
 /* ============================================================================
    状态
    ============================================================================ */
-let CFG = { apiUrl: '', apiKey: '', model: '', temp: 0.9, stream: true, think: 'off', extra: '', len: 800, pick: 'local', codexCap: 6000 };
+let CFG = { apiUrl: '', apiKey: '', model: '', temp: 0.9, stream: true, think: 'off', extra: '', len: 800, pick: 'local', codexCap: 6000, maxTok: 8000 };
 let BOOK = null;
 let genState = { running: false, stop: false, text: '', el: null };
 let saveTimer = 0;
@@ -1001,8 +1004,35 @@ function stripBlocks(s) {
   t = t.replace(/<<<[^>]*>>>/g, '');
   return t.replace(/^[\s\-—–]+/, '').trim();
 }
+/* 兜底：模型偶尔忘了写标记，或把块写坏了（被截断）。
+   做法同游戏版的 salvageState：在回复尾部扫出“长得像账本/幕后”的 JSON 对象。 */
+function salvageJSON(full, kind) {
+  const tail = String(full || '').slice(-4000);
+  const LED = ['people', 'threads', 'props', 'place', 'time', 'summary', 'pov'];
+  const GOD = ['truth', 'hooks', 'agenda', 'foreshadow', 'risks', 'if_inaction'];
+  const keys = kind === 'LEDGER' ? LED : GOD;
+  const out = [];
+  for (let i = tail.indexOf('{'); i >= 0; i = tail.indexOf('{', i + 1)) {
+    for (let j = tail.length; j > i; j = tail.lastIndexOf('}', j - 1)) {
+      const s = tail.slice(i, j + 1);
+      if (s.length < 8) continue;
+      let o = null;
+      try { o = JSON.parse(s); } catch (e) { try { o = JSON.parse(stripTrailingCommas(s)); } catch (e2) { o = null; } }
+      if (o && typeof o === 'object' && !Array.isArray(o) && keys.some(k => k in o)) out.push(o);
+      if (out.length) break;
+    }
+    if (out.length) break;
+  }
+  return out[0] || null;
+}
 function parseReply(full) {
-  const out = { text: stripBlocks(full), ledger: extractBlock(full, 'LEDGER') || extractBlock(full, 'STATE'), god: extractBlock(full, 'GOD') };
+  const out = { text: stripBlocks(full), ledger: null, god: null, ledHow: '', godHow: '' };
+  out.ledger = extractBlock(full, 'LEDGER') || extractBlock(full, 'STATE');
+  if (out.ledger) out.ledHow = 'block';
+  else { out.ledger = salvageJSON(full, 'LEDGER'); if (out.ledger) out.ledHow = 'salvage'; }
+  out.god = extractBlock(full, 'GOD');
+  if (out.god) out.godHow = 'block';
+  else { out.god = salvageJSON(full, 'GOD'); if (out.god) out.godHow = 'salvage'; }
   if (!out.ledger && !/<<<[^>]*>>>/.test(String(full || ''))) out.text = clean(full);
   return out;
 }
@@ -1160,7 +1190,8 @@ function openStats() {
     + '<div class="card" style="margin-top:12px"><div class="mut">本书</div>'
     + '<div class="kv"><span class="k">累计</span><em>' + usageLine(bk) + '</em></div>'
     + '<div class="kv"><span class="k">正文</span><em>' + n + ' 段 · ' + bookChars() + ' 字</em></div>'
-    + '<div class="kv"><span class="k">平均</span><em>' + (bk.calls ? Math.round(bk.completion / bk.calls) + ' 输出 tokens / 段' : '—') + '</em></div></div>'
+    + '<div class="kv"><span class="k">平均</span><em>' + (bk.calls ? Math.round(bk.completion / bk.calls) + ' 输出 tokens / 段' : '—') + '</em></div>'
+    + '<div class="kv"><span class="k">状态块</span><em>没收到 ' + BOOK.paras.filter(p => p.ledOk === false).length + ' 段 / 共 ' + BOOK.paras.length + ' 段</em></div></div>'
     + '<div class="card"><div class="mut">这台设备（所有书合计）</div><div class="kv"><span class="k">累计</span><em>' + usageLine(loc) + '</em></div></div>'
     + '<div class="card"><div class="mut">提示词构成（每段重发一次）</div>'
     + '<div class="kv"><span class="k">世界核心</span><em>' + charCount(coreText()) + ' 字</em></div>'
@@ -1168,11 +1199,21 @@ function openStats() {
     + '<div class="kv"><span class="k">文风/铁律/契约</span><em>固定文案，可被接口缓存</em></div>'
     + '<div class="mut" style="margin-top:8px">估算：世界核心＋本段设定＋人物卡＋文风契约约 '
     + (charCount(coreText()) + currentSelection().chars + currentSelection().cardChars + 3400) + ' 字（每段重发一次）</div></div>'
-    + '<button class="btn wide" data-x="clear">清空这台设备的累计</button>', null);
+    + '<button class="btn wide" data-x="clear">清空这台设备的累计</button>'
+    + '<div class="card"><div class="mut">排障</div>'
+    + (BOOK.lastFail ? '<div class="kv"><span class="k">最近一次失败</span><em>' + new Date(BOOK.lastFail.at).toLocaleString() + ' · ' + BOOK.lastFail.chars + ' 字 · finish=' + esc(BOOK.lastFail.finish || '-') + '</em></div>'
+      + '<button class="btn sm wide" data-x="copyfail" style="margin-top:8px">📋 复制模型原样输出（发给开发者排障用）</button>'
+      + '<div class="mut" style="margin-top:6px">这段是模型当时真正吐出来的内容尾巴。若里面有 <<<LEDGER>>> 但 JSON 断了，就是被截断；若完全没有，就是它没按格式回。</div>'
+      : '<div class="mut">（还没有失败记录）</div>') + '</div>', null);
   $('#sheetPanel').onclick = ev => {
     const el = ev.target.closest('[data-x]'); if (!el) return;
     if (el.dataset.x === '1') return closeSheet();
     if (el.dataset.x === 'clear') { localStorage.removeItem(USAGE_KEY); toast('已清空'); closeSheet(); renderApi(); }
+    if (el.dataset.x === 'copyfail') {
+      const t = (BOOK.lastFail && BOOK.lastFail.tail) || '';
+      if (!t) { toast('没有失败记录'); return; }
+      navigator.clipboard.writeText(t).then(() => toast('已复制，粘给我就行'), () => toast('复制失败，长按下面这段自己选一下吧'));
+    }
   };
 }
 
@@ -1185,6 +1226,9 @@ async function callLLM(messages, onDelta) {
   const base = { model: CFG.model, messages: messages, temperature: typeof CFG.temp === 'number' ? CFG.temp : 0.9, stream: streaming };
   if (streaming) base.stream_options = { include_usage: true };
   const injected = Object.assign({}, thinkParams(), extraParams());
+  /* 输出上限：不给的话，正文一长就可能把后面的状态块挤掉（截断），
+     而块一断 JSON 就解析不了，状态就静默地不更新了。 */
+  if (+CFG.maxTok > 0 && injected.max_tokens == null) injected.max_tokens = +CFG.maxTok;
   const send = b => fetch(CFG.apiUrl, { method: 'POST', headers: headers, body: JSON.stringify(b) });
 
   let res = await send(Object.assign({}, base, injected));
@@ -1390,10 +1434,16 @@ async function writePara() {
     return;
   }
   const beat = curBeat();
-  BOOK.paras.push({ id: uid(), beatId: beat ? beat.id : '', pov: curPov(), text: text, state: 'draft', dir: clean(BOOK._dir), before: before });
+  BOOK.paras.push({
+    id: uid(), beatId: beat ? beat.id : '', pov: curPov(), text: text, state: 'draft',
+    dir: clean(BOOK._dir), before: before,
+    ledOk: !!led, godOk: !!god,
+  });
   pruneSnaps();
+  const newP = BOOK.paras[BOOK.paras.length - 1];
   if (led) mergeLedger(led);
   if (god) mergeGod(god);
+  BOOK.ledMiss = led ? 0 : (BOOK.ledMiss || 0) + 1;
   if (!BOOK.ledger.pov) BOOK.ledger.pov = curPov();
   const d = BOOK.dice.pending;
   if (d) { BOOK.dice.last = Object.assign({}, d); BOOK.dice.pending = null; }
@@ -1403,7 +1453,11 @@ async function writePara() {
   BOOK._picked = null;
   save(); renderAll();
   const n = charCount(text);
-  if (finish === 'length') toast('这一段被输出长度上限截断了（' + n + ' 字）。可以在接口设置里加 {"max_tokens":4096} 试试。', 7000);
+  if (!led) {
+    /* 把模型这次的原样输出尾部存下来，供作者一键复制反馈 */
+    BOOK.lastFail = { at: Date.now(), chars: charCount(all), finish: finish, tail: String(all).slice(-1500) };
+    toast('⚠ 这一段没收到状态块（账本/幕后没更新）。九成是输出被截断或块写坏了。\n点这一段下面的「⟳ 补状态块」可以单补一次；经常这样就把「单次最大输出」调大一点。', 9000);
+  } else if (finish === 'length') toast('这一段被输出长度上限截断了（' + n + ' 字），但状态块拿到了。可以在接口设置里把「单次最大输出」调大。', 7000);
   else if (n < target * 0.7) toast('只写了 ' + n + ' 字（目标 ' + target + '）。点「再写一段」会接着往下写。', 5000);
   else toast('写好了：' + n + ' 字');
 }
@@ -1529,6 +1583,31 @@ function openCast() {
     const x = ev.target.closest('[data-x]');
     if (x && x.dataset.x === '1') closeSheet();
   };
+}
+
+/* 补状态块：万一某段没拿到块，单独让它补一次（输出很短，很便宜） */
+async function fixLedger(i) {
+  const p = BOOK.paras[i];
+  if (!p) return;
+  setBusy(true, '正在补这一段的状态块…');
+  try {
+    const msgs = [
+      { role: 'system', content: '你是资料整理员。只输出 JSON 块，不要任何解释文字。' },
+      { role: 'user', content: '下面是一段小说正文，以及当前的账本与幕后记录。请根据这段正文，**只**输出两个块：\n\n'
+        + '<<<LEDGER>>>\n{…账本里发生变化的字段…}\n<<<END>>>\n\n<<<GOD>>>\n{…幕后…}\n<<<END>>>\n\n'
+        + '账本字段：' + LEDGER_SPEC + '\n\n幕后字段：' + GOD_SPEC
+        + '\n\n当前账本：' + JSON.stringify(BOOK.ledger)
+        + '\n\n要整理的正文：\n' + clean(p.text) },
+    ];
+    const r = await callLLM(msgs, null);
+    const pr = parseReply(r.text);
+    let ok = false;
+    if (pr.ledger) { mergeLedger(pr.ledger); p.ledOk = true; ok = true; }
+    if (pr.god) { mergeGod(pr.god); p.godOk = true; ok = true; }
+    save(); renderAll();
+    toast(ok ? '✅ 状态块已补上（' + (pr.ledHow === 'salvage' ? '从散装 JSON 里认出来的' : '正常解析') + '）' : '还是没解析出来。试试把「思考程度」关掉，或把「单次最大输出」调大。', 7000);
+  } catch (e) { toast('补状态失败：' + e.message, 7000); }
+  setBusy(false);
 }
 
 async function rewriteLast() {
@@ -1670,7 +1749,10 @@ function renderDoc() {
     '<div class="para ' + (p.state === 'draft' ? 'draft' : '') + '" data-pid="' + p.id + '">'
     + '<div class="meta"><span class="pov">' + esc(p.pov || '未设视点') + '</span>'
     + '<span class="st">' + (p.state === 'draft' ? '草稿' : '已定稿') + ' · ' + charCount(p.text) + ' 字</span></div>'
-    + (p.dir ? '<button class="mini" data-act="reuseDir" data-i="' + i + '" title="点一下把这个方向放回输入框">↺ 用这个方向</button>' + esc(p.dir.slice(0, 30)) + (p.dir.length > 30 ? '…' : '') + '<div class="mut"></div>' : '')
+    + (p.ledOk === false ? '<div class="mut" style="margin-bottom:6px;color:var(--acc)">⚠ 这一段没收到状态块（账本与幕后没更新）'
+      + '<button class="mini" style="margin-left:6px" data-act="fixledger" data-i="' + i + '">⟳ 补状态块</button></div>' : '')
+    + (clean(p.dir) ? '<div class="mut" style="margin-bottom:6px">按这个方向写：' + esc(clean(p.dir).slice(0, 28)) + (clean(p.dir).length > 28 ? '…' : '')
+      + '<button class="mini" style="margin-left:6px" data-act="reuseDir" data-i="' + i + '" title="把这个方向放回输入框">↺ 用这个方向</button></div>' : '')
     + '<div class="body">' + esc(p.text) + '</div>'
     + '<div class="tools">'
     + '<button class="mini" data-act="editpara" data-i="' + i + '">✎ 改</button>'
@@ -1880,6 +1962,7 @@ function renderApi() {
   $('#cfgTemp').value = typeof CFG.temp === 'number' ? CFG.temp : 0.9;
   $('#cfgExtra').value = CFG.extra || '';
   $('#cfgLen').value = CFG.len || 800;
+  $('#cfgMaxTok').value = (CFG.maxTok === 0 || CFG.maxTok) ? CFG.maxTok : 8000;
   $('#cfgStream').value = CFG.stream === false ? '0' : '1';
   const sel = $('#cfgThink');
   if (!sel.options.length) sel.innerHTML = THINK_MODES.map(m => '<option value="' + m.key + '">' + esc(m.label) + '</option>').join('');
@@ -1964,6 +2047,7 @@ document.addEventListener('click', e => {
       if (p && $('#dirBox')) { $('#dirBox').value = clean(p.dir) || ''; toast('方向已放回输入框，可以直接改或直接发'); }
       return;
     }
+    if (a === 'fixledger') { fixLedger(i); return; }
     if (a === 'cleardice') { BOOK.dice.pending = null; save(); renderDoc(); return; }
     if (a === 'delperson') { BOOK.ledger.people.splice(i, 1); save(); renderLedger(); return; }
     if (a === 'delthread') { BOOK.ledger.threads.splice(i, 1); save(); renderLedger(); return; }
@@ -2306,10 +2390,10 @@ $('#btnCast').onclick = () => openCast();
 $('#cfgProvider').onchange = e => applyProvider(+e.target.value);
 $('#btnModels').onclick = () => fetchModels();
 $('#btnTest').onclick = () => testConn();
-['cfgApiUrl', 'cfgApiKey', 'cfgModel', 'cfgTemp', 'cfgExtra', 'cfgLen'].forEach(id => {
+['cfgApiUrl', 'cfgApiKey', 'cfgModel', 'cfgTemp', 'cfgExtra', 'cfgLen', 'cfgMaxTok'].forEach(id => {
   $('#' + id).oninput = e => {
-    const k = { cfgApiUrl: 'apiUrl', cfgApiKey: 'apiKey', cfgModel: 'model', cfgTemp: 'temp', cfgExtra: 'extra', cfgLen: 'len' }[id];
-    CFG[k] = (k === 'temp' || k === 'len') ? (+e.target.value || 0) : e.target.value;
+    const k = { cfgApiUrl: 'apiUrl', cfgApiKey: 'apiKey', cfgModel: 'model', cfgTemp: 'temp', cfgExtra: 'extra', cfgLen: 'len', cfgMaxTok: 'maxTok' }[id];
+    CFG[k] = (k === 'temp' || k === 'len' || k === 'maxTok') ? (+e.target.value || 0) : e.target.value;
     saveCfg();
   };
 });
