@@ -723,20 +723,18 @@ function curPov() {
 }
 const isNarrator = () => clean(BOOK.narr.pov) === NARRATOR;
 /* 视角规矩：第三人称（跟一个人）/ 上帝视角（全知）/ 旁白（不锁定单一人物） */
+/* 视角规矩：只跟「人称」有关，**故意不含具体人名**——
+   人名放到最末的任务段去，这样每段换视点也不会把固定的前缀打废（接口的缓存是按最长相同前缀算的）。 */
 function viewRule() {
-  const per = BOOK.narr.person, pov = curPov(), L = [];
-  if (pov === NARRATOR) {
-    L.push('这一段**不锁定某一个人**：用旁白把同时发生的几件事串起来，谁在场写谁，可以让不同角色看到不同的东西。');
-    L.push('切换场景或角色时**另起一段**，给读者一个清楚的落点（时间、地点、谁在说话），不要在一句话里跳。');
-  } else if (per === '上帝视角') {
-    L.push('全知视角：可以写多个角色的所见所想，也可以交代没人在场时发生的事。');
-    L.push('但**一段里不要来回跳**——一处场景写透，切换时另起一段并交代落点。');
-  } else {
-    L.push('只跟视点人物「' + pov + '」：写他看得见、听得到、想得到的。');
-    L.push('他不在场的对话与内幕，**不许出现在正文里**；要写别的角色，只能写他们外在的行为与语言。');
+  if (BOOK.narr.person === '上帝视角') {
+    return '全知视角：可以写多个角色的所见所想，也可以交代没人在场时发生的事。\n'
+      + '但**一段里不要来回跳**——一处场景写透，切换时另起一段并交代落点。';
   }
-  return L.join('\n');
+  return '只跟视点人物写：写他看得见、听得到、想得到的。\n'
+    + '他不在场的对话与内幕，**不许出现在正文里**；要写别的角色，只能写他们外在的行为与语言。';
 }
+/* 给人看的一行：人称 · 视点 */
+function viewLine() { return BOOK.narr.person + ' · ' + (isNarrator() ? '旁白' : curPov()); }
 function charCount(s) { return clean(s).replace(/\s/g, '').length; }
 function bookChars() { return BOOK.paras.reduce((n, p) => n + charCount(p.text), 0); }
 
@@ -840,22 +838,28 @@ function currentSelection() {
 }
 
 function outlineText() {
+  /* 只给“当前章节 ± 1”的大纲：长篇小说全量列出来既费 token，又一动就废掉整段缓存 */
+  const ci = Math.max(0, BOOK.chapters.indexOf(curChapter()));
+  const from = Math.max(0, ci - 1), to = Math.min(BOOK.chapters.length - 1, ci + 1);
   const out = [];
-  BOOK.chapters.forEach((c, i) => {
-    out.push('### 第' + (i + 1) + '章：' + (clean(c.title) || '（未命名）'));
+  if (from > 0) out.push('（前面还有 ' + from + ' 章，已写过就不列了）');
+  for (let i = from; i <= to; i++) {
+    const c = BOOK.chapters[i];
+    out.push('### 第 ' + (i + 1) + ' 章' + (i === ci ? '（当前）' : '') + '：' + (clean(c.title) || '（未命名）'));
     (c.beats || []).forEach((b, j) => {
       if (!clean(b.text)) return;
       const mark = b.id === BOOK.cursor.beatId ? '  ←【本段要写这条】' : (b.state === 'done' ? '  （已写）' : '');
       out.push((j + 1) + '. ' + clean(b.text) + mark);
     });
-  });
+  }
+  if (to < BOOK.chapters.length - 1) out.push('（后面还有 ' + (BOOK.chapters.length - 1 - to) + ' 章）');
   return out.length ? out.join('\n') : '（作者还没给大纲，请写得更保守：只延续上文的自然走向，不要制造新事件。）';
 }
 
 function ledgerText() {
   const l = BOOK.ledger;
-  const o = { time: l.time, place: l.place, pov: BOOK.narr.pov || l.pov, people: l.people, threads: l.threads, props: l.props };
-  return JSON.stringify(o, null, 1);
+  const o = { time: l.time, place: l.place, people: l.people, threads: l.threads, props: l.props };
+  return JSON.stringify(o);   /* 不缩进：省 20～30% 字符，模型一样读得懂 */
 }
 
 /* 最近两段的原文：用来保持语气、避免重复、保证接得上 */
@@ -868,7 +872,9 @@ function taskBlock(round, partial) {
   const c = curChapter(), b = curBeat();
   const L = [];
   L.push('# 本次任务（以这里为准写这一段）');
-  L.push('- 叙事视角：' + BOOK.narr.person + ' · 视点：' + (isNarrator() ? '旁白（不锁定单一人物，同一段里可以出现不同场景与角色）' : curPov()));
+  L.push('- 叙事视角：' + BOOK.narr.person + ' · 视点：' + (isNarrator()
+    ? '旁白（**不锁定单一人物**：同一段里可以出现不同场景与角色，切换时另起一段交代落点）'
+    : curPov() + '（只跟这一个人）'));
   const od = clean(BOOK._dir);
   const bb = (b && clean(b.text)) ? clean(b.text) : '';
   if (od) L.push('- **这一段的剧情（作者刚给的，只能扩写它）**：' + od);
@@ -879,7 +885,7 @@ function taskBlock(round, partial) {
   if (BOOK.narr.bans && clean(BOOK.narr.bans)) L.push('- 禁止出现：' + clean(BOOK.narr.bans));
   const last = BOOK.paras.slice(-1)[0];
   if (last && clean(last.text)) {
-    L.push('- **上一段的结尾原文**（从这里接着往下写）：\n' + clean(last.text).slice(-420));
+    L.push('- **上一段的结尾**（从这里接着往下写）：\n…' + clean(last.text).slice(-240));
   }
   const d = BOOK.dice.pending;
   if (d) L.push('- 🎲 **随机结果（硬约束，必须朝这个方向写）**：' + d.table + ' 第 ' + d.face + ' 号 =「' + d.label + '」——' + (d.desc || ''));
@@ -895,16 +901,6 @@ function buildMessages(round, partial) {
     + '你的产出只有两样东西——正文，和两个用来更新界面的状态块。');
   const sel = currentSelection();
   p.push('# 世界核心（常驻）\n' + coreText());
-  if (sel.codexList.length) {
-    p.push('# 本段载入的设定条目（按需取用）\n'
-      + '**只能用这些条目里写到的设定。需要用到没列出来的东西时，不要自己发明，写进幕后块的 hooks。**\n\n'
-      + sel.codexText);
-  }
-  if (sel.cardList.length) {
-    p.push('# 本段的人物卡\n' + sel.cardText
-      + '\n（没列出来的人物＝这一段不需要写他们。不要自行编造新人物。）'
-      + '\n（人物的“秘密”是他的隐藏动机，不要在正文里直接说破。）');
-  }
   BOOK.lastInject = {
     codex: sel.codexList.map(r => clean(r.e.name)),
     cards: sel.cardList.map(r => clean(r.c.name)),
@@ -917,7 +913,7 @@ function buildMessages(round, partial) {
   p.push('# 文风语体：' + styleName + '（硬性要求）\n' + sr.rule + '\n' + (ANCIENT(styleName)
     ? '这一档允许文言腔调与说书腔，不必刻意现代化。'
     : STYLE_BAN + '\n语体由这一档决定，**不要因为世界观“看起来像古代”就自动改用古风**。'));
-  p.push('# 叙事视角：' + nar.person + ' · 视点：' + curPov() + '\n' + viewRule());
+  p.push('# 叙事视角：' + nar.person + '\n' + viewRule());   /* 人名不放这里，放最末的任务段 */
   if (nar.realism !== false) p.push(REALISM_SPEC);
   p.push(writeRules(nar));
   /* 导演旋钮：节奏 / 情感强度 / 意外性 / 主题 / 长期笔记（从游戏版的上帝视角搬来） */
@@ -936,12 +932,24 @@ function buildMessages(round, partial) {
   p.push(outputSpec(godOn()));
   p.push(LEDGER_SPEC);
   if (godOn()) p.push(GOD_SPEC);
+  /* ⚠ 顺序有讲究：**固定的在前，会变的在后**。接口的上下文缓存是按最长相同前缀算的，
+     以前把「本段载入的条目 / 人物卡」放在最前面，后面三千多字固定文案每段都被废掉，命中率很低。 */
+  if (sel.codexList.length) {
+    p.push('# 本段载入的设定条目（按需取用）\n'
+      + '**只能用这些条目里写到的设定。需要用到没列出来的东西时，不要自己发明，写进幕后块的 hooks。**\n\n'
+      + sel.codexText);
+  }
+  if (sel.cardList.length) {
+    p.push('# 本段的人物卡\n' + sel.cardText
+      + '\n（没列出来的人物＝这一段不需要写他们。不要自行编造新人物。）'
+      + '\n（人物的“秘密”是他的隐藏动机，不要在正文里直接说破。）');
+  }
   p.push('# 故事板（作者的大纲，只作方向参考）\n' + outlineText());
   p.push('# 账本（已经发生的事实，必须与之保持一致）\n' + ledgerText());
   const sum = clean(BOOK.ledger.summary);
   if (sum) p.push('# 长期摘要（更早的剧情）\n' + sum);
-  const rec = recentText(2);
-  if (rec) p.push('# 最近写过的原文（保持语气、不要重复）\n' + rec);
+  const rec = recentText(1);
+  if (rec) p.push('# 上一段的原文（保持语气、不要重复）\n' + rec);
   p.push(taskBlock(round, partial));
 
   const msgs = [{ role: 'system', content: p.join('\n\n') }];
@@ -1072,7 +1080,7 @@ function mergeLedger(inc) {
   /* summary 是累积的长期记忆：每段的摘要追加进去，而不是覆盖 */
   if (typeof inc.summary === 'string' && clean(inc.summary) && l.summary.indexOf(clean(inc.summary)) < 0) {
     l.summary = (clean(l.summary) ? clean(l.summary) + '\n' : '') + '· ' + clean(inc.summary);
-    if (l.summary.length > 1800) l.summary = l.summary.slice(-1800);
+    if (l.summary.length > 1200) l.summary = l.summary.slice(-1200);
     touched = true;
   }
   if (Array.isArray(inc.people) && inc.people.length) { l.people = mergePeople(l.people, inc.people); touched = true; }
@@ -1186,12 +1194,21 @@ function openStats() {
   const loc = load(USAGE_KEY, { prompt: 0, completion: 0, cached: 0, calls: 0, last: null });
   const bk = BOOK.stats || { prompt: 0, completion: 0, cached: 0, calls: 0 };
   const n = BOOK.paras.length || 0;
+  const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
+  const bd = promptBreakdown();
+  const bdTotal = bd.reduce((s, x) => s + x.n, 0);
   openSheet('<button class="close" data-x="1">✕</button><h3>📊 运行与统计</h3>'
     + '<div class="card" style="margin-top:12px"><div class="mut">本书</div>'
     + '<div class="kv"><span class="k">累计</span><em>' + usageLine(bk) + '</em></div>'
     + '<div class="kv"><span class="k">正文</span><em>' + n + ' 段 · ' + bookChars() + ' 字</em></div>'
     + '<div class="kv"><span class="k">平均</span><em>' + (bk.calls ? Math.round(bk.completion / bk.calls) + ' 输出 tokens / 段' : '—') + '</em></div>'
     + '<div class="kv"><span class="k">状态块</span><em>没收到 ' + BOOK.paras.filter(p => p.ledOk === false).length + ' 段 / 共 ' + BOOK.paras.length + ' 段</em></div></div>'
+    + '<div class="kv"><span class="k">缓存命中</span><em>' + (loc.last ? pct(loc.last.cached, loc.last.p) + '（上一次请求）' : '—')
+    + '　·　' + pct(loc.cached, loc.prompt) + '（累计）</em></div>'
+    + '<div class="mut" style="margin-top:6px">命中率低通常是：① 每段都改了「世界核心 / 文风 / 导演 / 硬性事实」（这些在最前面，一改就全废）；② 用的是不支持提示词缓存的接口。正文与账本那几段本来就是每段都变的，不影响前缀缓存。</div></div>'
+    + '<div class="card"><div class="mut">提示词分段（共 ' + bdTotal + ' 字符，每段重发一次）</div>'
+    + bd.map(x => '<div class="kv"><span class="k" style="flex:1 1 140px">' + esc(x.k) + '</span><em>' + x.n + ' 字（' + Math.round(x.n / bdTotal * 100) + '%）</em></div>').join('')
+    + '</div>'
     + '<div class="card"><div class="mut">这台设备（所有书合计）</div><div class="kv"><span class="k">累计</span><em>' + usageLine(loc) + '</em></div></div>'
     + '<div class="card"><div class="mut">提示词构成（每段重发一次）</div>'
     + '<div class="kv"><span class="k">世界核心</span><em>' + charCount(coreText()) + ' 字</em></div>'
@@ -1437,7 +1454,7 @@ async function writePara() {
   BOOK.paras.push({
     id: uid(), beatId: beat ? beat.id : '', pov: curPov(), text: text, state: 'draft',
     dir: clean(BOOK._dir), before: before,
-    ledOk: !!led, godOk: !!god,
+    ledOk: !!led, godOk: !!god, stale: false,
   });
   pruneSnaps();
   const newP = BOOK.paras[BOOK.paras.length - 1];
@@ -1604,10 +1621,21 @@ async function fixLedger(i) {
     let ok = false;
     if (pr.ledger) { mergeLedger(pr.ledger); p.ledOk = true; ok = true; }
     if (pr.god) { mergeGod(pr.god); p.godOk = true; ok = true; }
+    if (ok) p.stale = false;
     save(); renderAll();
     toast(ok ? '✅ 状态块已补上（' + (pr.ledHow === 'salvage' ? '从散装 JSON 里认出来的' : '正常解析') + '）' : '还是没解析出来。试试把「思考程度」关掉，或把「单次最大输出」调大。', 7000);
   } catch (e) { toast('补状态失败：' + e.message, 7000); }
   setBusy(false);
+}
+
+/* 提示词分段测量：给「运行与统计」用，让你看得见钱花在哪一段 */
+function promptBreakdown() {
+  try {
+    const sys = buildMessages(0, '')[0].content;
+    const parts = sys.split(/\n\n(?=# )/);
+    return parts.map(t => ({ k: t.split('\n')[0].replace(/^#\s*/, '').slice(0, 22), n: t.length }))
+      .sort((a, b) => b.n - a.n);
+  } catch (e) { return []; }
 }
 
 async function rewriteLast() {
@@ -1749,8 +1777,9 @@ function renderDoc() {
     '<div class="para ' + (p.state === 'draft' ? 'draft' : '') + '" data-pid="' + p.id + '">'
     + '<div class="meta"><span class="pov">' + esc(p.pov || '未设视点') + '</span>'
     + '<span class="st">' + (p.state === 'draft' ? '草稿' : '已定稿') + ' · ' + charCount(p.text) + ' 字</span></div>'
-    + (p.ledOk === false ? '<div class="mut" style="margin-bottom:6px;color:var(--acc)">⚠ 这一段没收到状态块（账本与幕后没更新）'
-      + '<button class="mini" style="margin-left:6px" data-act="fixledger" data-i="' + i + '">⟳ 补状态块</button></div>' : '')
+    + ((p.ledOk === false || p.stale) ? '<div class="mut" style="margin-bottom:6px;color:var(--acc)">⚠ '
+      + (p.ledOk === false ? '这一段没收到状态块' : '这一段还没同步到账本与幕后')
+      + '<button class="mini" style="margin-left:6px" data-act="fixledger" data-i="' + i + '">⟳ 让 AI 读这一段并同步</button></div>' : '')
     + (clean(p.dir) ? '<div class="mut" style="margin-bottom:6px">按这个方向写：' + esc(clean(p.dir).slice(0, 28)) + (clean(p.dir).length > 28 ? '…' : '')
       + '<button class="mini" style="margin-left:6px" data-act="reuseDir" data-i="' + i + '" title="把这个方向放回输入框">↺ 用这个方向</button></div>' : '')
     + '<div class="body">' + esc(p.text) + '</div>'
@@ -2028,7 +2057,14 @@ document.addEventListener('click', e => {
       save(); renderBoard(); return;
     }
     if (a === 'editpara') return editPara(i);
-    if (a === 'donepara') { const p = BOOK.paras[i]; p.state = p.state === 'draft' ? 'done' : 'draft'; save(); renderDoc(); return; }
+    if (a === 'donepara') {
+      const p = BOOK.paras[i];
+      p.state = p.state === 'draft' ? 'done' : 'draft';
+      save(); renderDoc();
+      if (p.state === 'done' && (p.ledOk === false || p.stale) && clean(p.text)
+        && window.confirm('这一段还没有同步到账本与幕后。要不要让 AI 读一遍补上？')) fixLedger(i);
+      return;
+    }
     if (a === 'delpara') {
       const p = BOOK.paras[i];
       const isLast = i === BOOK.paras.length - 1;
@@ -2077,7 +2113,14 @@ function editPara(i) {
     + '<textarea class="edit"></textarea>'
     + '<div class="tools"><button class="mini" data-act2="save">保存</button><button class="mini" data-act2="cancel">取消</button></div>';
   const ta = el.querySelector('textarea'); ta.value = p.text; ta.focus();
-  el.querySelector('[data-act2="save"]').onclick = () => { p.text = ta.value; save(); renderAll(); toast('改好了（下次续写会吃你改过的版本）'); };
+  el.querySelector('[data-act2="save"]').onclick = () => {
+    const was = clean(p.text);
+    p.text = ta.value;
+    if (clean(p.text) !== was) p.stale = true;   /* 文字改过了，账本与幕后可能跟不上了 */
+    save(); renderAll();
+    toast('改好了（下次续写会吃你改过的版本）');
+    if (p.stale && clean(p.text) && window.confirm('这一段要不要让 AI 读一遍，把账本与幕后同步过来？\n\n只补状态，不会改动你的文字。')) fixLedger(BOOK.paras.indexOf(p));
+  };
   el.querySelector('[data-act2="cancel"]').onclick = () => renderDoc();
 }
 
@@ -2211,7 +2254,7 @@ function openViewpoint() {
 }
 $('#btnRewrite').onclick = () => rewriteLast();
 $('#btnManual').onclick = () => {
-  const p = { id: uid(), beatId: (curBeat() || {}).id || '', pov: curPov(), text: '', state: 'draft' };
+  const p = { id: uid(), beatId: (curBeat() || {}).id || '', pov: curPov(), text: '', state: 'draft', ledOk: false, godOk: false, stale: true };
   BOOK.paras.push(p); save(); renderDoc(); show('doc');
   editPara(BOOK.paras.length - 1);
 };
