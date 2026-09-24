@@ -1307,11 +1307,47 @@ function makeStreamEl() {
   return { el: el, push: t => { body.innerHTML = esc(t) + '<span class="cursor"></span>'; wrap.scrollTop = wrap.scrollHeight; } };
 }
 
+/* ============================================================================
+   回滚：删掉/重写最后一段时，账本与幕后一起退回写它之前的状态
+   ----------------------------------------------------------------------------
+   以前只删文字，账本（人物状态/已知/伏笔/时间地点）和幕后（真相/伏笔/风险）留在原地，
+   AI 下一段就会基于“已经不存在的情节”往下写。
+   做法：每段存一份“写它之前”的快照（前 12 段），按段删时就退到那个快照。
+   只有**最后一段**能真正回滚（中间段的删除不影响后续累积状态）。
+   ============================================================================ */
+const SNAP_KEEP = 12;
+function snapNow() {
+  return {
+    led: JSON.stringify(BOOK.ledger),
+    god: JSON.stringify(BOOK.god),
+    inject: BOOK.lastInject ? JSON.stringify(BOOK.lastInject) : '',
+    dice: BOOK.dice.pending ? JSON.stringify(BOOK.dice.pending) : '',
+  };
+}
+function pruneSnaps() {
+  const n = BOOK.paras.length;
+  BOOK.paras.forEach((p, i) => { if (i < n - SNAP_KEEP) delete p.before; });
+}
+function rollbackTo(pid) {
+  const idx = BOOK.paras.map(p => p.id).indexOf(pid);
+  if (idx < 0) return false;
+  const s = BOOK.paras[idx].before;
+  if (!s) return false;
+  try {
+    BOOK.ledger = JSON.parse(s.led);
+    BOOK.god = JSON.parse(s.god);
+    BOOK.lastInject = s.inject ? JSON.parse(s.inject) : null;
+    if (s.dice) BOOK.dice.pending = JSON.parse(s.dice);
+    return true;
+  } catch (e) { return false; }
+}
+
 async function writePara() {
   if (genState.running) { toast('正在写，等一下'); return; }
   if (!curChapter()) { toast('先在故事板建一章，并写一条 beat'); return; }
   /* 方向框是这一段剧情的来源；没写就是「顺写」 */
   BOOK._dir = $('#dirBox') ? clean($('#dirBox').value) : '';
+  const before = snapNow();   /* 写它之前的状态，删/重写时要退回来 */
   const target = Math.max(200, +CFG.len || 800);
   genState = { running: true, stop: false, text: '' };
   const stream = makeStreamEl();
@@ -1354,7 +1390,8 @@ async function writePara() {
     return;
   }
   const beat = curBeat();
-  BOOK.paras.push({ id: uid(), beatId: beat ? beat.id : '', pov: curPov(), text: text, state: 'draft', dir: clean(BOOK._dir) });
+  BOOK.paras.push({ id: uid(), beatId: beat ? beat.id : '', pov: curPov(), text: text, state: 'draft', dir: clean(BOOK._dir), before: before });
+  pruneSnaps();
   if (led) mergeLedger(led);
   if (god) mergeGod(god);
   if (!BOOK.ledger.pov) BOOK.ledger.pov = curPov();
@@ -1497,8 +1534,14 @@ function openCast() {
 async function rewriteLast() {
   const last = BOOK.paras[BOOK.paras.length - 1];
   if (!last) { toast('还没有段落'); return; }
-  if (!window.confirm('重写最后一段？现在这段会被删掉。')) return;
+  if (!window.confirm('重写最后一段？\n\n会把这一段删掉重写：账本与幕后一起退回写它之前，方向与视点也沿用这一段的。')) return;
+  const dir = clean(last.dir), pov = clean(last.pov);
+  const rolled = rollbackTo(last.id);
   BOOK.paras.pop();
+  if (dir && $('#dirBox')) $('#dirBox').value = dir;   /* 把方向放回输入框，不再变成「顺写」 */
+  if (pov) { BOOK.narr.pov = pov; BOOK.ledger.pov = pov; }
+  save(); renderDoc();
+  toast(rolled ? '已退回写这一段之前的状态，正在用同一个方向重写…' : '正在重写（这一段没存快照，状态未回滚）');
   await writePara();
 }
 
@@ -1627,7 +1670,7 @@ function renderDoc() {
     '<div class="para ' + (p.state === 'draft' ? 'draft' : '') + '" data-pid="' + p.id + '">'
     + '<div class="meta"><span class="pov">' + esc(p.pov || '未设视点') + '</span>'
     + '<span class="st">' + (p.state === 'draft' ? '草稿' : '已定稿') + ' · ' + charCount(p.text) + ' 字</span></div>'
-    + (p.dir ? '<div class="mut" style="margin-bottom:6px">按你的方向写：' + esc(p.dir.slice(0, 40)) + (p.dir.length > 40 ? '…' : '') + '</div>' : '')
+    + (p.dir ? '<button class="mini" data-act="reuseDir" data-i="' + i + '" title="点一下把这个方向放回输入框">↺ 用这个方向</button>' + esc(p.dir.slice(0, 30)) + (p.dir.length > 30 ? '…' : '') + '<div class="mut"></div>' : '')
     + '<div class="body">' + esc(p.text) + '</div>'
     + '<div class="tools">'
     + '<button class="mini" data-act="editpara" data-i="' + i + '">✎ 改</button>'
@@ -1903,7 +1946,24 @@ document.addEventListener('click', e => {
     }
     if (a === 'editpara') return editPara(i);
     if (a === 'donepara') { const p = BOOK.paras[i]; p.state = p.state === 'draft' ? 'done' : 'draft'; save(); renderDoc(); return; }
-    if (a === 'delpara') { if (!window.confirm('删掉这一段？')) return; BOOK.paras.splice(i, 1); save(); renderAll(); return; }
+    if (a === 'delpara') {
+      const p = BOOK.paras[i];
+      const isLast = i === BOOK.paras.length - 1;
+      if (!window.confirm('删掉这一段？' + (isLast ? '\n\n账本与幕后会一起退回写它之前的状态；方向会放回输入框。' : '\n\n这不是最后一段，状态不会回滚（后面几段已经累积过了）。'))) return;
+      const rolled = isLast ? rollbackTo(p.id) : false;
+      if (rolled && clean(p.dir) && $('#dirBox')) $('#dirBox').value = p.dir;
+      BOOK.paras.splice(i, 1);
+      if (!isLast) BOOK.lastInject = null;
+      save(); renderAll();
+      toast(isLast ? ('已删除' + (rolled ? '，状态已回滚' : '（这一段太久远，没存快照，状态未回滚）') + (clean(p.dir) ? '，方向已放回输入框' : ''))
+        : '已删除（中间段，状态不回滚）');
+      return;
+    }
+    if (a === 'reuseDir') {
+      const p = BOOK.paras[i];
+      if (p && $('#dirBox')) { $('#dirBox').value = clean(p.dir) || ''; toast('方向已放回输入框，可以直接改或直接发'); }
+      return;
+    }
     if (a === 'cleardice') { BOOK.dice.pending = null; save(); renderDoc(); return; }
     if (a === 'delperson') { BOOK.ledger.people.splice(i, 1); save(); renderLedger(); return; }
     if (a === 'delthread') { BOOK.ledger.threads.splice(i, 1); save(); renderLedger(); return; }
